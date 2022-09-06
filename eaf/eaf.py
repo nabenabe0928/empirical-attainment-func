@@ -68,6 +68,13 @@ def _compute_emp_att_surf(X: np.ndarray, pf_set_list: List[np.ndarray], levels: 
 
     NOTE:
         Algorithm is different, but the result will be same.
+        When we define N = n_independent_runs, K = X.size, and S = n_samples,
+        the original algorithm requires O(K log K + NK)
+        and this algorithm requires O(NK log (NK)).
+        Although our algorithm is a bit worse than the original algorithm,
+        since the enumerating Pareto solutions requires O(NS log S),
+        which might be smaller complexity but will take more time in Python,
+        the time complexity will not dominate the whole process.
     """
     n_levels = len(levels)
     emp_att_surfs = np.zeros((n_levels, X.size, 2))
