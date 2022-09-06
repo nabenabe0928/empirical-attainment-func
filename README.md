@@ -72,9 +72,9 @@ Note that we currently support only `n_obj=2`.
 
 ## Preliminaries
 1. Define a multi-output function as $f: \mathbb{R}^D \rightarrow \mathbb{R}^M$,
-2. Assume we run $N$ independent optimization runs and obtain the Pareto sets for each run $\forall i \in \{1,\dots,M\}, \mathcal{F}_i \subseteq \mathbb{R}^M$,
-3. Define the objective vector $\boldsymbol{f} \in \mathbb{R}^M$ weakly dominates a vector $\boldsymbol{y}$ in the objective space if and only if $\forall m \in \{1,\dots,M\}, f_m \leq y_m$ and notate it as $\boldsymbol{f} \preceq \boldsymbol{y}$, and
-4. Define a set of objective vectors $F$ weakly dominates  a vector $\boldsymbol{y}$ in the objective space if and only if $\exist \boldsymbol{f} \in F, \boldsymbol{f} \leq \boldsymbol{y}$ and notate it as $F \preceq \boldsymbol{y}$
+2. Assume we run $N$ independent optimization runs and obtain the Pareto sets for each run $\forall i \in \\{1,\dots,M\\}, \mathcal{F}_i \subseteq \mathbb{R}^M$,
+3. Define the objective vector $\boldsymbol{f} \in \mathbb{R}^M$ weakly dominates a vector $\boldsymbol{y}$ in the objective space if and only if $\forall m \in \\{1,\dots,M\\}, f_m \leq y_m$ and notate it as $\boldsymbol{f} \preceq \boldsymbol{y}$, and
+4. Define a set of objective vectors $F$ weakly dominates  a vector $\boldsymbol{y}$ in the objective space if and only if $\exists \boldsymbol{f} \in F, \boldsymbol{f} \leq \boldsymbol{y}$ and notate it as $F \preceq \boldsymbol{y}$
 
 
 ## Attainment surface
@@ -92,19 +92,19 @@ Credit: Figure 4. in [Indicator-Based Evolutionary Algorithm with Hypervolume Ap
 ## $k$% attainment surface
 First, we define the following empirical attainment function:
 
-$
-\alpha(\boldsymbol{y}) := \alpha(\boldsymbol{y}|\mathcal{F}_1,\dots,\mathcal{F}_N) = \frac{1}{N} \sum_{n=1}^N \mathbb{1}[\mathcal{F}_n \preceq \boldsymbol{y}].
-$
+$$
+\alpha(\boldsymbol{y}) := \alpha ( \boldsymbol{y} |  \mathcal{F}_{1} , \dots , \mathcal{F}_{N})  = \frac{1}{N} \sum_{{n=1}}^{N} \mathbb{I} [ \mathcal{F}_{n} \preceq \boldsymbol{y} ] .
+$$
 
 The $k$% attainment surface is the attainment surface such that it is achieved by $k$% of independent runs and more formally, it is defined as:
-$
-S = \biggl\{\boldsymbol{y}\mid\alpha(\boldsymbol{y}) \geq \frac{k}{100}\biggr\}.
-$
+
+$S = \biggl\\{\boldsymbol{y}\mid\alpha(\boldsymbol{y}) \geq \frac{k}{100}\biggr\\}.$
+
 Note that as we only have $N$ independent runs, we define a control parameter **level** ($1 \leq L \leq N$) and obtain the following set:
-$
-S_L = \biggl\{\boldsymbol{y}\mid\alpha(\boldsymbol{y}) \geq \frac{L}{N}\biggr\}.
-$
-The best, median, worst attainment surfaces could be fetched by $\{1/N,50,100\}$% attainment surface, respectively.
+
+$S_L = \biggl\\{\boldsymbol{y}\mid\alpha(\boldsymbol{y}) \geq \frac{L}{N}\biggr\\}.$
+
+The best, median, worst attainment surfaces could be fetched by $\\{1/N,50,100\\}$% attainment surface, respectively.
 
 Please check the following references for more details:
 
