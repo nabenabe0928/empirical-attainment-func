@@ -16,7 +16,7 @@ if __name__ == "__main__":
     plt.scatter(emp_att_surf[:, 0], emp_att_surf[:, 1], color="red", s=2, marker="*", label=label)
 
     label = "the median attainment"
-    emp_att_surf = get_empirical_attainment_surface(costs=costs, level=n_trials//2)
+    emp_att_surf = get_empirical_attainment_surface(costs=costs, level=n_trials // 2)
     plt.scatter(emp_att_surf[:, 0], emp_att_surf[:, 1], color="blue", s=2, marker="*", label=label)
 
     label = "the worst attainment"
