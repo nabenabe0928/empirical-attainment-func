@@ -33,7 +33,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from eaf import get_empirical_attainment_surface, plot_surface
-from examples.toy_func import func
+
+
+def func(X: np.ndarray) -> np.ndarray:
+    f1 = np.sum(X**2, axis=-1)
+    f2 = np.sum((X - 2) ** 2, axis=-1)
+    return np.stack([f1, f2], axis=-1)
 
 
 if __name__ == "__main__":
@@ -77,7 +82,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from eaf import get_empirical_attainment_surface, plot_surface_with_band
-from examples.toy_func import func
+
+
+def func(X: np.ndarray) -> np.ndarray:
+    f1 = np.sum(X**2, axis=-1)
+    f2 = np.sum((X - 2) ** 2, axis=-1)
+    return np.stack([f1, f2], axis=-1)
 
 
 if __name__ == "__main__":
@@ -101,6 +111,7 @@ if __name__ == "__main__":
 ![Demo of the attainment surface with a band](figs/demo_with_band.png)
 
 
+# Supplementary information
 ## Preliminaries
 1. Define a multi-output function as $f: \mathbb{R}^D \rightarrow \mathbb{R}^M$,
 2. Assume we run $N$ independent optimization runs and obtain the Pareto sets for each run $\forall i \in \\{1,\dots,M\\}, \mathcal{F}_i \subseteq \mathbb{R}^M$,
