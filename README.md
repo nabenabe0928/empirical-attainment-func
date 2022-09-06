@@ -19,7 +19,7 @@ The original paper is available below.
 
 **NOTE**
 
-When we define $N$ as `n_independent_runs`, $K$ as `the number of unique objective values in the first objective`, and $S$ as `the number of samples in each independent run`, the original algorithm requires $O(NK + K \log K)$ and our algorithm requires $O(NK \log NK)$.
+When we define $N$ as `n_independent_runs`, $K$ as `the number of unique objective values in the first objective`, and $S$ as `the number of samples in each independent run`, the original algorithm requires $O(NK + K \log K)$ and our algorithm requires $O(NK \log K)$.
 Although our time complexity is slightly worse, the implementation is simpler and the runtime is dominated by the enumeration of Pareto solutions in each indepedent run for both algorithms, this will not be a big problem.
 
 ## Setup & test
