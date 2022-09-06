@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from eaf import get_empirical_attainment_surface
+from eaf import get_empirical_attainment_surface, plot_surface
 
 
 def func(X: np.ndarray) -> np.ndarray:
@@ -44,12 +44,14 @@ if __name__ == "__main__":
     X = np.random.random((n_trials, n_samples, dim)) * 10 - 5
     costs = func(X)
 
-    label = "the median attainment"
-    emp_att_surf = get_empirical_attainment_surface(costs=costs, level=n_trials // 2)
-    plt.scatter(emp_att_surf[:, 0], emp_att_surf[:, 1], color="blue", s=2, marker="*", label=label)
+    labels = [f"the {feat} attainment" for feat in ["best", "median", "worst"]]
+    levels = [1, n_trials // 2, n_trials]
+    colors = ["red", "blue", "green"]
+    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=[1, n_trials // 2, n_trials])
 
-    plt.grid()
-    plt.legend()
+    _, ax = plt.subplots()
+    plot_surface(ax, colors=colors, labels=labels, emp_att_surfs=emp_att_surfs, s=2, marker="*")
+    ax.grid()
     plt.show()
 
 ```
@@ -65,7 +67,7 @@ $ python run_test.py
 All you need is to feed `costs` to `get_empirical_attainment_surface`.
 The arguments for this function are as follows:
 1. `costs` (np.ndarray): The costs obtained in the observations and he shape must be `(n_independent_runs, n_samples, n_obj)`.
-2. `level` (int): Control the k in the k-% attainment surface and k = level / n_independent_runs. (For more details, see $k$% attainment surface Section below)
+2. `levels` (List[int]): A list of level: level controls the k in the k-% attainment surface and k = level / n_independent_runs. (For more details, see $k$% attainment surface Section below)
 3. `larger_is_better_objectives` (Optional[List[int]]): The indices of the objectives that are better when the values are larger. If None, we consider all objectives are better when they are smaller.
 
 Note that we currently support only `n_obj=2`.

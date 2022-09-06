@@ -1,4 +1,5 @@
 import itertools
+from typing import List
 import unittest
 
 import numpy as np
@@ -25,14 +26,7 @@ def get_dummy_dataset() -> np.ndarray:
     return costs
 
 
-def test_compute_emp_att_surf() -> None:
-    costs = get_dummy_dataset()
-    pf_set_list = _get_pf_set_list(costs)
-    costs = costs.reshape(20 * 10, 2)
-    order = np.argsort(costs[:, 0])
-    costs = costs[order]
-    level = 5
-    sol = _compute_emp_att_surf(X=costs[:, 0], pf_set_list=pf_set_list, level=level)
+def naive_sol1(sol: np.ndarray, level: int, pf_set_list: List[np.ndarray]) -> None:
     for p in sol:
         if p[-1] == np.inf:
             continue
@@ -43,6 +37,8 @@ def test_compute_emp_att_surf() -> None:
             cnt += attained
         assert cnt >= level
 
+
+def naive_sol2(costs: np.ndarray, level: int, pf_set_list: List[np.ndarray]) -> None:
     for p in itertools.product(costs[:, 0], costs[:, 1]):
         cnt = 0
         point = np.asarray(p)
@@ -51,6 +47,19 @@ def test_compute_emp_att_surf() -> None:
             cnt += attained
         if cnt >= level:
             assert np.any(np.all(p == point, axis=-1))
+
+
+def test_compute_emp_att_surf() -> None:
+    costs = get_dummy_dataset()
+    pf_set_list = _get_pf_set_list(costs)
+    costs = costs.reshape(20 * 10, 2)
+    order = np.argsort(costs[:, 0])
+    costs = costs[order]
+    levels = np.array([1, 5, 10])
+    sols = _compute_emp_att_surf(X=costs[:, 0], pf_set_list=pf_set_list, levels=levels)
+    for level, sol in zip(levels, sols):
+        naive_sol1(sol, level, pf_set_list)
+        naive_sol2(costs, level, pf_set_list)
 
 
 def test_get_pf_set_list() -> None:
@@ -69,28 +78,29 @@ def test_get_pf_set_list() -> None:
 def test_get_empirical_attainment_surface() -> None:
     costs = np.random.random((2, 3))
     with pytest.raises(ValueError):
-        get_empirical_attainment_surface(costs, level=1)
+        get_empirical_attainment_surface(costs, levels=[1])
 
     costs = np.random.random((2, 3, 3))
     with pytest.raises(NotImplementedError):
-        get_empirical_attainment_surface(costs, level=1)
+        get_empirical_attainment_surface(costs, levels=[1])
 
     costs = np.random.random((2, 3, 2))
     for level in range(-1, 5):
         if 1 <= level <= 2:
-            get_empirical_attainment_surface(costs, level=level)
+            get_empirical_attainment_surface(costs, levels=[level])
         else:
             with pytest.raises(ValueError):
-                get_empirical_attainment_surface(costs, level=level)
+                get_empirical_attainment_surface(costs, levels=[level])
 
-    assert np.all(get_empirical_attainment_surface(costs, level=1, larger_is_better_objectives=[0]) >= 0)
+    emp_att_surfs = get_empirical_attainment_surface(costs, levels=[1], larger_is_better_objectives=[0])
+    assert np.all(emp_att_surfs[:, :-1, :] >= 0)
     costs = np.array([[[0, 1], [1, 0], [2, 2]]])
-    sol = get_empirical_attainment_surface(costs, level=1, larger_is_better_objectives=[0])
-    ans = np.array([[2, 2], [1, 0]])
+    sol = get_empirical_attainment_surface(costs, levels=[1], larger_is_better_objectives=[0])
+    ans = np.array([[2, np.inf], [2, 2], [1, 0], [-np.inf, 0]])
     assert np.allclose(sol, ans)
 
-    sol = get_empirical_attainment_surface(costs, level=1, larger_is_better_objectives=[0, 1])
-    ans = np.array([[2, 2]])
+    sol = get_empirical_attainment_surface(costs, levels=[1], larger_is_better_objectives=[0, 1])
+    ans = np.array([[2, -np.inf], [2, 2], [-np.inf, 2]])
     assert np.allclose(sol, ans)
 
 
