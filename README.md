@@ -49,7 +49,7 @@ if __name__ == "__main__":
     labels = [f"the {feat} attainment" for feat in ["best", "median", "worst"]]
     levels = [1, n_trials // 2, n_trials]
     colors = ["red", "blue", "green"]
-    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=[1, n_trials // 2, n_trials])
+    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
     plot_surface(ax, colors=colors, labels=labels, emp_att_surfs=emp_att_surfs)
@@ -104,7 +104,7 @@ The $k$% attainment surface is the attainment surface such that it is achieved b
 
 $S = \biggl\\{\boldsymbol{y}\mid\alpha(\boldsymbol{y}) \geq \frac{k}{100}\biggr\\}.$
 
-Note that as we only have $N$ independent runs, we define a control parameter **level** ($1 \leq L \leq N$) and obtain the following set:
+Note that as we only have $N$ independent runs, we define a control parameter **level** ( $1 \leq L \leq N$ ) and obtain the following set:
 
 $S_L = \biggl\\{\boldsymbol{y}\mid\alpha(\boldsymbol{y}) \geq \frac{L}{N}\biggr\\}.$
 
