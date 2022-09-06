@@ -9,11 +9,13 @@ When we run single-objective optimization problems, comparisons between multiple
 Although we could make scatter plots for multi-objective optimization tasks, such plots do not allow comparisons using multiple seeds.
 In this repository, we would like to give the solution to this issue.
 
-We use $k$% attainment surface or empirical attainment function.
+We use $k$% attainment surface or empirical attainment function and visualize as in the figure below.
+
+![Demo of the attainment surface](figs/demo.png)
+
 The original paper is available below.
 
 [1] [On the Performance Assessment and Comparison of Stochastic Multi-objective Optimizers](https://eden.dei.uc.pt/~cmfonsec/fonseca-ppsn1996-reprint.pdf)
-
 
 ## Setup & test
 
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=[1, n_trials // 2, n_trials])
 
     _, ax = plt.subplots()
-    plot_surface(ax, colors=colors, labels=labels, emp_att_surfs=emp_att_surfs, s=2, marker="*")
+    plot_surface(ax, colors=colors, labels=labels, emp_att_surfs=emp_att_surfs)
     ax.grid()
     plt.show()
 
