@@ -33,21 +33,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from eaf import get_empirical_attainment_surface, plot_surface
-
-
-def func(X: np.ndarray) -> np.ndarray:
-    f1 = np.sum(X**2, axis=-1)
-    f2 = np.sum((X - 2) ** 2, axis=-1)
-    return np.stack([f1, f2], axis=-1)
+from examples.toy_func import func
 
 
 if __name__ == "__main__":
-    dim, n_samples, n_trials = 2, 300, 50
-    X = np.random.random((n_trials, n_samples, dim)) * 10 - 5
+    dim, n_samples, n_independent_runs = 2, 100, 50
+    X = np.random.random((n_independent_runs, n_samples, dim)) * 10 - 5
     costs = func(X)
 
     labels = [f"the {feat} attainment" for feat in ["best", "median", "worst"]]
-    levels = [1, n_trials // 2, n_trials]
+    levels = [1, n_independent_runs // 2, n_independent_runs]
     colors = ["red", "blue", "green"]
     emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
@@ -73,6 +68,38 @@ The arguments for this function are as follows:
 3. `larger_is_better_objectives` (Optional[List[int]]): The indices of the objectives that are better when the values are larger. If None, we consider all objectives are better when they are smaller.
 
 Note that we currently support only `n_obj=2`.
+
+To plot with an uncertainty band, users can do, for example, a median plot with a band between 25% -- 75% percentile.
+
+```python
+import matplotlib.pyplot as plt
+
+import numpy as np
+
+from eaf import get_empirical_attainment_surface, plot_surface_with_band
+from examples.toy_func import func
+
+
+if __name__ == "__main__":
+    dim, n_samples, n_independent_runs = 2, 100, 50
+    X = np.random.random((n_independent_runs, n_samples, dim)) * 10 - 5
+    costs = func(X)
+
+    levels = [n_independent_runs // 4, n_independent_runs // 2, 3 * n_independent_runs // 4]
+    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
+
+    _, ax = plt.subplots()
+    plot_surface_with_band(ax, color="red", label="random", emp_att_surfs=emp_att_surfs)
+    ax.legend()
+    ax.grid()
+    plt.show()
+
+```
+
+**Output**
+
+![Demo of the attainment surface with a band](figs/demo_with_band.png)
+
 
 ## Preliminaries
 1. Define a multi-output function as $f: \mathbb{R}^D \rightarrow \mathbb{R}^M$,

@@ -134,6 +134,8 @@ def get_empirical_attainment_surface(
         raise NotImplementedError("Three or more objectives are not supported.")
     if not all(1 <= level <= n_independent_runs for level in levels):
         raise ValueError(f"All elements in levels must be in [1, n_independent_runs], but got {levels}")
+    if not np.all(np.maximum.accumulate(levels) == levels):
+        raise ValueError(f"levels must be an increasing sequence, but got {levels}")
     if larger_is_better_objectives is not None:
         costs = _change_directions(costs, larger_is_better_objectives=larger_is_better_objectives)
 

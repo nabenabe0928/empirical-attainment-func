@@ -85,6 +85,9 @@ def test_get_empirical_attainment_surface() -> None:
         get_empirical_attainment_surface(costs, levels=[1])
 
     costs = np.random.random((2, 3, 2))
+    with pytest.raises(ValueError):
+        get_empirical_attainment_surface(costs, levels=[2, 1])
+
     for level in range(-1, 5):
         if 1 <= level <= 2:
             get_empirical_attainment_surface(costs, levels=[level])
