@@ -17,7 +17,9 @@ The original paper is available below.
 
 [1] [On the Performance Assessment and Comparison of Stochastic Multi-objective Optimizers](https://eden.dei.uc.pt/~cmfonsec/fonseca-ppsn1996-reprint.pdf)
 
-Note that when we define $N$ as `n_independent_runs`, $K$ as `the number of unique objective values in the first objective`, and $S$ as the number of samples in each independent run, the original algorithm requires $O(K \log K + NK)$ and our algorithm requires O(NK \log NK).
+**NOTE**
+
+When we define $N$ as `n_independent_runs`, $K$ as `the number of unique objective values in the first objective`, and $S$ as `the number of samples in each independent run`, the original algorithm requires $O(NK + K \log K)$ and our algorithm requires $O(NK \log NK)$.
 Although our time complexity is slightly worse, the implementation is simpler and the runtime is dominated by the enumeration of Pareto solutions in each indepedent run for both algorithms, this will not be a big problem.
 
 ## Setup & test
