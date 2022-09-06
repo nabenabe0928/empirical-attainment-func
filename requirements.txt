@@ -1,4 +1,5 @@
 # For package
+fast_pareto
 
 # For local check
 pytest-cov
