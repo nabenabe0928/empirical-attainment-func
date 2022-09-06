@@ -40,7 +40,6 @@ def test_compute_emp_att_surf() -> None:
         cnt = 0
         for pf_set in pf_set_list:
             attained = np.any(np.all(pf_set <= p, axis=-1))
-            print(pf_set, p, attained)
             cnt += attained
         assert cnt >= level
 
@@ -83,6 +82,16 @@ def test_get_empirical_attainment_surface() -> None:
         else:
             with pytest.raises(ValueError):
                 get_empirical_attainment_surface(costs, level=level)
+
+    assert np.all(get_empirical_attainment_surface(costs, level=1, larger_is_better_objectives=[0]) >= 0)
+    costs = np.array([[[0, 1], [1, 0], [2, 2]]])
+    sol = get_empirical_attainment_surface(costs, level=1, larger_is_better_objectives=[0])
+    ans = np.array([[2, 2], [1, 0]])
+    assert np.allclose(sol, ans)
+
+    sol = get_empirical_attainment_surface(costs, level=1, larger_is_better_objectives=[0, 1])
+    ans = np.array([[2, 2]])
+    assert np.allclose(sol, ans)
 
 
 if __name__ == "__main__":

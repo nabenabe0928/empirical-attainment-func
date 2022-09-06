@@ -1,14 +1,12 @@
 from typing import List, Optional
 
 from fast_pareto import is_pareto_front
+from fast_pareto.pareto import _change_directions
 
 import numpy as np
 
 
-def _get_pf_set_list(
-    costs: np.ndarray,
-    larger_is_better_objectives: Optional[List[int]] = None,
-) -> List[np.ndarray]:
+def _get_pf_set_list(costs: np.ndarray) -> List[np.ndarray]:
     """
     Get the list of Pareto front sets.
 
@@ -17,9 +15,6 @@ def _get_pf_set_list(
             The costs obtained in the observations.
             The shape must be (n_trials, n_samples, n_obj).
             For now, we only support n_obj == 2.
-        larger_is_better_objectives (Optional[List[int]]):
-            The indices of the objectives that are better when the values are larger.
-            If None, we consider all objectives are better when they are smaller.
 
     Returns:
         pf_set_list (List[np.ndarray]):
@@ -29,11 +24,10 @@ def _get_pf_set_list(
             the first objective.
     """
     pf_set_list: List[np.ndarray] = []
-    kwargs = dict(larger_is_better_objectives=larger_is_better_objectives, filter_duplication=True)
     for _costs in costs:
         order = np.argsort(_costs[:, 0])
         _costs = _costs[order]
-        pf_set_list.append(_costs[is_pareto_front(_costs, **kwargs)])
+        pf_set_list.append(_costs[is_pareto_front(_costs, filter_duplication=True)])
     return pf_set_list
 
 
@@ -59,6 +53,12 @@ def _compute_emp_att_surf(X: np.ndarray, pf_set_list: List[np.ndarray], level: i
             The shape is (trial number, Pareto solution index, objective index).
             Note that each pareto front set is sorted based on the ascending order of
             the first objective.
+
+    Returns:
+        emp_att_surf (np.ndarray):
+            The vertices of the empirical attainment surface.
+            If emp_att_surf[i, 1] takes np.inf, this is not actually on the surface.
+            The shape is (X.size, 2).
 
     Reference:
         Title: On the Computation of the Empirical Attainment Function
@@ -130,10 +130,14 @@ def get_empirical_attainment_surface(
     if not (1 <= level <= n_trials):
         raise ValueError(f"level must be in [1, n_trials], but got {level}")
     if larger_is_better_objectives is not None:
-        raise NotImplementedError("Not available yet")
+        costs = _change_directions(costs, larger_is_better_objectives=larger_is_better_objectives)
 
-    pf_set_list = _get_pf_set_list(costs, larger_is_better_objectives=larger_is_better_objectives)
+    pf_set_list = _get_pf_set_list(costs)
     pf_sols = np.vstack(pf_set_list)
     X = np.unique(pf_sols[:, 0])
 
-    return _compute_emp_att_surf(X=X, pf_set_list=pf_set_list, level=level)
+    emp_att_surf = _compute_emp_att_surf(X=X, pf_set_list=pf_set_list, level=level)
+    if larger_is_better_objectives is not None:
+        emp_att_surf = _change_directions(emp_att_surf, larger_is_better_objectives=larger_is_better_objectives)
+
+    return emp_att_surf
