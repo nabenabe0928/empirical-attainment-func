@@ -86,7 +86,7 @@ def _compute_emp_att_surf(X: np.ndarray, pf_set_list: List[np.ndarray], level: i
 
 def get_empirical_attainment_surface(
     costs: np.ndarray,
-    level: float,
+    level: int,
     larger_is_better_objectives: Optional[List[int]] = None,
 ) -> np.ndarray:
     """

@@ -1,6 +1,6 @@
 # A repository template
 
-[![Build Status](https://github.com/nabenabe0928/empirical-attainment-func$/workflows/Functionality%20test/badge.svg?branch=main)](https://github.com/nabenabe0928/empirical-attainment-func)
+[![Build Status](https://github.com/nabenabe0928/empirical-attainment-func/workflows/Functionality%20test/badge.svg?branch=main)](https://github.com/nabenabe0928/empirical-attainment-func)
 [![codecov](https://codecov.io/gh/nabenabe0928/repo-template/branch/main/graph/badge.svg?token=FQWPWEJSWE)](https://codecov.io/gh/nabenabe0928/empirical-attainment-func)
 
 Before copying the repository, please make sure to change the following parts:
