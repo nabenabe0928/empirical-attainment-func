@@ -140,7 +140,7 @@ Credit: Figure 4. in [Indicator-Based Evolutionary Algorithm with Hypervolume Ap
 First, we define the following empirical attainment function:
 
 $$
-\alpha(\boldsymbol{y}) := \alpha ( \boldsymbol{y} |  \mathcal{F}_{1} , \dots , \mathcal{F}_{N})  = \frac{1}{N} \sum_{{n=1}}^{N} \mathbb{I} [ \mathcal{F}_{n} \preceq \boldsymbol{y} ] .
+\alpha(\boldsymbol{y}) := \alpha ( \boldsymbol{y} |  \mathcal{F}\_{1} , \dots , \mathcal{F}\_{N})  = \frac{1}{N} \sum_{{n=1}}^{N} \mathbb{I} [ \mathcal{F}_{n} \preceq \boldsymbol{y} ] .
 $$
 
 The $k$% attainment surface is the attainment surface such that it is achieved by $k$% of independent runs and more formally, it is defined as:
