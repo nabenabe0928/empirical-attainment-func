@@ -20,7 +20,7 @@ The original paper is available below.
 **NOTE**
 
 When we define $N$ as `n_independent_runs`, $K$ as `the number of unique objective values in the first objective`, and $S$ as `the number of samples in each independent run`, the original algorithm requires $O(NK + K \log K)$ and our algorithm requires $O(NK \log K)$.
-Although our time complexity is slightly worse, the implementation is simpler and the runtime is dominated by the enumeration of Pareto solutions in each indepedent run for both algorithms, this will not be a big problem.
+Although our time complexity is slightly worse, the implementation is simpler and the runtime is dominated by the enumeration of Pareto solutions in each indepedent run for both algorithms, so this will not be a big problem.
 
 ## Setup & test
 
@@ -74,7 +74,7 @@ $ python run_test.py
 All you need is to feed `costs` to `get_empirical_attainment_surface`.
 The arguments for this function are as follows:
 1. `costs` (np.ndarray): The costs obtained in the observations and he shape must be `(n_independent_runs, n_samples, n_obj)`.
-2. `levels` (List[int]): A list of level: level controls the k in the k-% attainment surface and k = level / n_independent_runs. (For more details, see $k$% attainment surface Section below)
+2. `levels` (List[int]): A list of levels: level controls the $k$ in the $k$% attainment surface and `k = level / n_independent_runs`. (For more details, see $k$% attainment surface Section below)
 3. `larger_is_better_objectives` (Optional[List[int]]): The indices of the objectives that are better when the values are larger. If None, we consider all objectives are better when they are smaller.
 
 Note that we currently support only `n_obj=2`.
@@ -151,7 +151,7 @@ Note that as we only have $N$ independent runs, we define a control parameter **
 
 $S_L = \biggl\\{\boldsymbol{y}\mid\alpha(\boldsymbol{y}) \geq \frac{L}{N}\biggr\\}.$
 
-The best, median, worst attainment surfaces could be fetched by $\\{1/N,50,100\\}$% attainment surface, respectively.
+The best, median, worst attainment surfaces could be fetched by $\\{1/N,1/2,1\\}\times 100$% attainment surface, respectively.
 
 Please check the following references for more details:
 
