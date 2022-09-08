@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 
@@ -25,11 +25,52 @@ def _transform_attainment_surface(emp_att_surfs: np.ndarray) -> Tuple[np.ndarray
     return emp_att_surfs, x_min, x_max, y_min, y_max
 
 
+def _step_direction(larger_is_better_objectives: Optional[List[int]]) -> str:
+    """
+    Check here:
+        https://matplotlib.org/stable/gallery/lines_bars_and_markers/step_demo.html#sphx-glr-gallery-lines-bars-and-markers-step-demo-py
+
+    min x min (post)
+        o...       R
+           :
+           o...
+              :
+              o
+
+    max x max (pre)
+        o
+        :
+        ...o
+           :
+    R      ...o
+
+    min x max (post)
+              o
+              :
+           o...
+           :
+        o...       R
+
+    max x min (pre)
+    R      ...o
+           :
+        ...o
+        :
+        o
+    """
+    if larger_is_better_objectives is None:
+        larger_is_better_objectives = []
+
+    large_f1_is_better = bool(0 in larger_is_better_objectives)
+    return "pre" if large_f1_is_better else "post"
+
+
 def plot_surface(
     ax: plt.Axes,
     emp_att_surfs: np.ndarray,
     colors: List[str],
     labels: List[str],
+    larger_is_better_objectives: Optional[List[int]] = None,
     **kwargs: Any,
 ) -> None:
     """
@@ -46,13 +87,18 @@ def plot_surface(
             The colors of each plot
         labels (List[str]):
             The labels of each plot.
+        larger_is_better_objectives (Optional[List[int]]):
+            The indices of the objectives that are better when the values are larger.
+            If None, we consider all objectives are better when they are smaller.
         kwargs:
             The kwargs for scatter.
     """
     emp_att_surfs, x_min, x_max, y_min, y_max = _transform_attainment_surface(emp_att_surfs)
     ax.set_xlim((x_min, x_max))
     ax.set_ylim((y_min, y_max))
+    step_dir = _step_direction(larger_is_better_objectives)
 
+    kwargs.update(drawstyle=f"steps-{step_dir}")
     for color, label, emp_att_surf in zip(colors, labels, emp_att_surfs):
         ax.plot(emp_att_surf[:, 0], emp_att_surf[:, 1], color=color, label=label, **kwargs)
 
@@ -62,6 +108,7 @@ def plot_surface_with_band(
     emp_att_surfs: np.ndarray,
     color: str,
     label: str,
+    larger_is_better_objectives: Optional[List[int]] = None,
     **kwargs: Any,
 ) -> None:
     """
@@ -80,6 +127,9 @@ def plot_surface_with_band(
             The color of the plot
         label (str):
             The label of the plot.
+        larger_is_better_objectives (Optional[List[int]]):
+            The indices of the objectives that are better when the values are larger.
+            If None, we consider all objectives are better when they are smaller.
         kwargs:
             The kwargs for scatter.
     """
@@ -94,6 +144,7 @@ def plot_surface_with_band(
     q0 = emp_att_surfs[0, :, 1]
     m = emp_att_surfs[1, :, 1]
     q1 = emp_att_surfs[-1, :, 1]
+    step_dir = _step_direction(larger_is_better_objectives)
 
-    ax.plot(dx, m, color=color, label=label, **kwargs)
-    ax.fill_between(dx, q0, q1, color=color, alpha=0.2, **kwargs)
+    ax.plot(dx, m, color=color, label=label, drawstyle=f"steps-{step_dir}", **kwargs)
+    ax.fill_between(dx, q0, q1, color=color, alpha=0.2, step=step_dir, **kwargs)

@@ -7,12 +7,26 @@ import pytest
 import numpy as np
 
 from eaf import get_empirical_attainment_surface, plot_surface, plot_surface_with_band
+from eaf.plot_surface import _step_direction
 
 
 def func(X: np.ndarray) -> np.ndarray:
     f1 = np.sum(X**2, axis=-1)
     f2 = np.sum((X - 2) ** 2, axis=-1)
     return np.stack([f1, f2], axis=-1)
+
+
+def test_step_direction() -> None:
+    larger_is_better_objectives = None
+    assert _step_direction(larger_is_better_objectives) == "post"
+    larger_is_better_objectives = []
+    assert _step_direction(larger_is_better_objectives) == "post"
+    larger_is_better_objectives = [1]
+    assert _step_direction(larger_is_better_objectives) == "post"
+    larger_is_better_objectives = [0]
+    assert _step_direction(larger_is_better_objectives) == "pre"
+    larger_is_better_objectives = [0, 1]
+    assert _step_direction(larger_is_better_objectives) == "pre"
 
 
 def test_plot() -> None:
