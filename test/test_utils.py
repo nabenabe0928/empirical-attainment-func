@@ -8,8 +8,8 @@ import pytest
 
 import numpy as np
 
-from eaf import pareto_front_to_surface, plot_surface, plot_surface_with_band
-from eaf.utils import LOGEPS, _check_surface, _step_direction, _transform_attainment_surface
+from eaf import pareto_front_to_surface, EmpiricalAttainmentFuncPlot
+from eaf.utils import LOGEPS, _check_surface, _step_direction
 
 
 def func(X: np.ndarray) -> np.ndarray:
@@ -89,17 +89,20 @@ def test_pareto_front_to_surface() -> None:
     assert np.allclose(np.maximum.accumulate(modified_pf[:, 1]), modified_pf[:, 1])
 
 
-def test_transform_attainment_surface() -> None:
-    emp_att_surfs = np.array(
+def test_transform_surface_list() -> None:
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+    surfs = np.array(
         [
             [-np.inf, 1, 2, 3, 4, np.inf],
             [np.inf, 8, 7, 6, 5, -np.inf],
         ]
     ).T
-    sol, _, _, _, _ = _transform_attainment_surface(emp_att_surfs, log_scale=None)
+    sol = eaf_plot._transform_surface_list([surfs])
     ans = np.array([[0.7, 1, 2, 3, 4, 4.33], [8.33, 8, 7, 6, 5, 4.7]]).T
+    assert np.allclose(sol, ans)
 
-    emp_att_surfs = np.array(
+    eaf_plot = EmpiricalAttainmentFuncPlot(log_scale=[0, 1])
+    surfs = np.array(
         [
             [LOGEPS, 1e-4, 1e-3, 1e-2, 1e-1, np.inf],
             [np.inf, 1e-5, 1e-6, 1e-7, 1e-8, LOGEPS],
@@ -111,7 +114,7 @@ def test_transform_attainment_surface() -> None:
             [2.13796209e-05, 1e-5, 1e-6, 1e-7, 1e-8, 5.01187234e-09],
         ]
     ).T
-    sol, _, _, _, _ = _transform_attainment_surface(emp_att_surfs, log_scale=[0, 1])
+    sol = eaf_plot._transform_surface_list([surfs])
     assert np.allclose(sol, ans)
 
 
@@ -141,10 +144,11 @@ def test_check_surface():
         _check_surface(surf)
 
     _, ax = plt.subplots()
+    eaf_plot = EmpiricalAttainmentFuncPlot()
     with pytest.raises(ValueError):
-        plot_surface(ax, np.random.random((30, 2)), color="red", label="dummy")
+        eaf_plot.plot_surface(ax, np.random.random((30, 2)), color="red", label="dummy")
     with pytest.raises(ValueError):
-        plot_surface_with_band(ax, np.random.random((3, 30, 2)), color="red", label="dummy")
+        eaf_plot.plot_surface_with_band(ax, np.random.random((3, 30, 2)), color="red", label="dummy")
 
     plt.close()
 

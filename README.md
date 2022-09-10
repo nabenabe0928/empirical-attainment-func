@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from eaf import get_empirical_attainment_surface, plot_surface
+from eaf import get_empirical_attainment_surface, EmpiricalAttainmentFuncPlot
 
 
 def func(X: np.ndarray) -> np.ndarray:
@@ -55,10 +55,11 @@ if __name__ == "__main__":
     labels = [f"the {feat} attainment" for feat in ["best", "median", "worst"]]
     levels = [1, n_independent_runs // 2, n_independent_runs]
     colors = ["red", "blue", "green"]
-    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
+    surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
-    plot_multiple_surface(ax, colors=colors, labels=labels, emp_att_surfs_list=emp_att_surfs)
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+    eaf_plot.plot_multiple_surface(ax, colors=colors, labels=labels, surfs=surfs)
     ax.grid()
     plt.show()
 
@@ -87,7 +88,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from eaf import get_empirical_attainment_surface, plot_surface_with_band
+from eaf import get_empirical_attainment_surface, EmpiricalAttainmentFuncPlot
 
 
 def func(X: np.ndarray) -> np.ndarray:
@@ -102,10 +103,11 @@ if __name__ == "__main__":
     costs = func(X)
 
     levels = [n_independent_runs // 4, n_independent_runs // 2, 3 * n_independent_runs // 4]
-    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
+    surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
-    plot_surface_with_band(ax, color="red", label="random", emp_att_surfs=emp_att_surfs)
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+    eaf_plot.plot_surface_with_band(ax, color="red", label="random", surfs=surfs)
     ax.legend()
     ax.grid()
     plt.show()

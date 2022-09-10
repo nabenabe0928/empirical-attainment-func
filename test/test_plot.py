@@ -8,10 +8,7 @@ import numpy as np
 
 from eaf import (
     get_empirical_attainment_surface,
-    plot_multiple_surface,
-    plot_multiple_surface_with_band,
-    plot_surface,
-    plot_surface_with_band,
+    EmpiricalAttainmentFuncPlot,
 )
 
 
@@ -29,17 +26,19 @@ def test_plot() -> None:
     labels = [f"the {feat} attainment" for feat in ["best", "median", "worst"]]
     levels = [1, n_trials // 2, n_trials]
     colors = ["red", "blue", "green"]
-    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
+    surfs_list = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
-    plot_multiple_surface(ax, colors=colors, labels=labels, emp_att_surfs_list=emp_att_surfs)
-    plot_surface(ax, color=colors[0], label=labels[0], emp_att_surf=emp_att_surfs[0])
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+    eaf_plot.plot_multiple_surface(ax, colors=colors, labels=labels, surfs=surfs_list)
+    eaf_plot.plot_surface(ax, color=colors[0], label=labels[0], surf=surfs_list[0])
     # test log scale
-    plot_surface(ax, color=colors[0], label=labels[0], emp_att_surf=emp_att_surfs[0], log_scale=[0, 1])
+    eaf_plot = EmpiricalAttainmentFuncPlot(log_scale=[0, 1])
+    eaf_plot.plot_surface(ax, color=colors[0], label=labels[0], surf=surfs_list[0])
 
     with pytest.raises(ValueError):
         # shape error
-        plot_surface(ax, color=colors[0], label=labels[0], emp_att_surf=emp_att_surfs)
+        eaf_plot.plot_surface(ax, color=colors[0], label=labels[0], surf=surfs_list)
 
     ax.legend()
     ax.grid()
@@ -52,23 +51,24 @@ def test_plot_with_band() -> None:
     costs = func(X)
 
     levels = [n_independent_runs // 4, n_independent_runs // 2, 3 * n_independent_runs // 4]
-    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
+    surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
-    plot_surface_with_band(ax, color="red", label="random", emp_att_surfs=emp_att_surfs)
-    plot_multiple_surface_with_band(
-        ax, colors=["red"] * 2, labels=["random"] * 2, emp_att_surfs_list=[emp_att_surfs] * 2
-    )
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+    eaf_plot.plot_surface_with_band(ax, color="red", label="random", surfs=surfs)
+    eaf_plot.plot_multiple_surface_with_band(ax, colors=["red"] * 2, labels=["random"] * 2, surfs_list=[surfs] * 2)
     ax.legend()
     ax.grid()
     plt.close()
 
     levels = [1, 2, 3, 4]
-    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
+    surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
+    eaf_plot = EmpiricalAttainmentFuncPlot()
     with pytest.raises(ValueError):
-        plot_surface_with_band(ax, color="red", label="random", emp_att_surfs=emp_att_surfs)
+        # Shape error ===> 4 lines are not allowed
+        eaf_plot.plot_surface_with_band(ax, surfs=surfs, color="red", label="random")
 
     plt.close()
 

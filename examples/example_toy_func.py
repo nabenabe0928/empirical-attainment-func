@@ -2,21 +2,42 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from eaf import get_empirical_attainment_surface, plot_multiple_surface
+from eaf import get_empirical_attainment_surface, EmpiricalAttainmentFuncPlot
 from examples.toy_func import func
 
 
-if __name__ == "__main__":
+def plot_single(ax: plt.Axes) -> None:
     dim, n_samples, n_independent_runs = 2, 100, 50
     X = np.random.random((n_independent_runs, n_samples, dim)) * 10 - 5
     costs = func(X)
 
-    labels = [f"the {feat} attainment" for feat in ["best", "median", "worst"]]
-    levels = [1, n_independent_runs // 2, n_independent_runs]
-    colors = ["red", "blue", "green"]
-    emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
+    levels = [n_independent_runs // 2]
+    surf = get_empirical_attainment_surface(costs=costs, levels=levels)[0]
+    eaf_plot = EmpiricalAttainmentFuncPlot()
 
-    _, ax = plt.subplots()
-    plot_multiple_surface(ax, colors=colors, labels=labels, emp_att_surfs_list=emp_att_surfs)
+    eaf_plot.plot_surface(ax, color="red", label="median", surf=surf)
     ax.grid()
+    ax.legend()
+
+
+def plot_multiple(ax: plt.Axes) -> None:
+    dim, n_samples, n_independent_runs = 2, 100, 50
+    X = np.random.random((n_independent_runs, n_samples, dim)) * 10 - 5
+    costs = func(X)
+
+    levels = [1, n_independent_runs // 2, n_independent_runs]
+    labels = ["best", "median", "worst"]
+    colors = ["red", "blue", "green"]
+    surfs_list = get_empirical_attainment_surface(costs=costs, levels=levels)
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+
+    eaf_plot.plot_multiple_surface(ax, surfs_list=surfs_list, colors=colors, labels=labels)
+    ax.grid()
+    ax.legend()
+
+
+if __name__ == "__main__":
+    _, axes = plt.subplots(ncols=2)
+    plot_single(axes[0])
+    plot_multiple(axes[1])
     plt.show()

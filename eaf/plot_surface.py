@@ -1,42 +1,27 @@
 from typing import Any, List, Optional, Union
 
-from eaf.utils import _check_surface, _step_direction, _transform_attainment_surface, _transform_surface_list
+from eaf.utils import (
+    LOGEPS,
+    _change_scale,
+    _check_surface,
+    _get_slighly_expanded_value_range,
+    _step_direction,
+    pareto_front_to_surface,
+)
 
 import matplotlib.pyplot as plt
 
 import numpy as np
 
 
-def _change_scale(ax: plt.Axes, log_scale: Optional[List[int]]) -> None:
-    log_scale = [] if log_scale is None else log_scale
-    if 0 in log_scale:
-        ax.set_xscale("log")
-    if 1 in log_scale:
-        ax.set_yscale("log")
-
-
-def plot_surface(
-    ax: plt.Axes,
-    emp_att_surf: np.ndarray,
-    color: str,
-    label: str,
-    larger_is_better_objectives: Optional[List[int]] = None,
-    log_scale: Optional[List[int]] = None,
-    **kwargs: Any,
-) -> Any:
+class EmpiricalAttainmentFuncPlot:
     """
-    Plot multiple surfaces.
+    The class to plot empirical attainment function.
 
     Args:
-        ax (plt.Axes):
-            The subplots axes.
-        emp_att_surf (np.ndarray):
-            The vertices of the empirical attainment surface.
-            The shape must be (X.size, 2).
-        color (str):
-            The color of the plot
-        label (str):
-            The label of the plot.
+        true_pareto_sols (Optional[np.ndarray]):
+            The true Pareto solutions if available.
+            It is used to compute the best values of each objective.
         larger_is_better_objectives (Optional[List[int]]):
             The indices of the objectives that are better when the values are larger.
             If None, we consider all objectives are better when they are smaller.
@@ -46,180 +31,211 @@ def plot_surface(
             you need to feed log_scale=[0].
             In principle, log_scale changes the minimum value of the axes
             from -np.inf to a small positive value.
-        kwargs:
-            The kwargs for scatter.
+        x_min, x_max, y_min, y_max (float):
+            The lower/upper bounds for each objective if available.
+            It is used to fix the value ranges of each objective in plots.
     """
-    if len(emp_att_surf.shape) != 2 or emp_att_surf.shape[1] != 2:
-        raise ValueError(f"The shape of emp_att_surf must be (n_points, 2), but got {emp_att_surf.shape}")
 
-    emp_att_surf, x_min, x_max, y_min, y_max = _transform_attainment_surface(emp_att_surf, log_scale)
-    ax.set_xlim((x_min, x_max))
-    ax.set_ylim((y_min, y_max))
-    step_dir = _step_direction(larger_is_better_objectives)
+    def __init__(
+        self,
+        true_pareto_sols: Optional[np.ndarray] = None,
+        larger_is_better_objectives: Optional[List[int]] = None,
+        log_scale: Optional[List[int]] = None,
+        x_min: float = np.inf,
+        x_max: float = -np.inf,
+        y_min: float = np.inf,
+        y_max: float = -np.inf,
+    ):
+        self.step_dir = _step_direction(larger_is_better_objectives)
+        self.larger_is_better_objectives = (
+            larger_is_better_objectives if larger_is_better_objectives is not None else []
+        )
+        self.log_scale = log_scale if log_scale is not None else []
+        self.x_is_log, self.y_is_log = 0 in self.log_scale, 1 in self.log_scale
+        self._plot_kwargs = dict(
+            larger_is_better_objectives=larger_is_better_objectives,
+            log_scale=log_scale,
+        )
 
-    kwargs.update(drawstyle=f"steps-{step_dir}")
-    _check_surface(emp_att_surf)
-    X, Y = emp_att_surf[:, 0], emp_att_surf[:, 1]
-    line = ax.plot(X, Y, color=color, label=label, **kwargs)
-    _change_scale(ax, log_scale)
-    return line
+        if true_pareto_sols is not None:
+            self.x_min, self.x_max, self.y_min, self.y_max = _get_slighly_expanded_value_range(true_pareto_sols)
+            self.true_pareto_surf = pareto_front_to_surface(
+                true_pareto_sols,
+                x_min=self.x_min,
+                x_max=self.x_max,
+                y_min=self.y_min,
+                y_max=self.y_max,
+                **self._plot_kwargs,
+            )
+        else:
+            # We cannot plot until we call _transform_surface_list
+            self.true_pareto_surf = None
+            self.x_min = max(LOGEPS, x_min) if 0 in self.log_scale else x_min
+            self.x_max = x_max
+            self.y_min = max(LOGEPS, y_min) if 1 in self.log_scale else y_min
+            self.y_max = y_max
 
+    def _transform_surface_list(self, surfs_list: List[np.ndarray]) -> List[np.ndarray]:
+        for surf in surfs_list:
+            x_min, x_max, y_min, y_max = _get_slighly_expanded_value_range(surf, self.log_scale)
+            self.x_min, self.x_max = min(self.x_min, x_min), max(self.x_max, x_max)
+            self.y_min, self.y_max = min(self.y_min, y_min), max(self.y_max, y_max)
 
-def plot_multiple_surface(
-    ax: plt.Axes,
-    emp_att_surfs_list: Union[np.ndarray, List[np.ndarray]],
-    colors: List[str],
-    labels: List[str],
-    larger_is_better_objectives: Optional[List[int]] = None,
-    log_scale: Optional[List[int]] = None,
-    **kwargs: Any,
-) -> List[Any]:
-    """
-    Plot multiple surfaces.
+        for surf in surfs_list:
+            lb = LOGEPS if self.x_is_log else -np.inf
+            surf[..., 0][surf[..., 0] == lb] = self.x_min
+            surf[..., 0][surf[..., 0] == np.inf] = self.x_max
 
-    Args:
-        ax (plt.Axes):
-            The subplots axes.
-        emp_att_surfs_list (Union[np.ndarray, List[np.ndarray]]):
-            The vertices of the empirical attainment surfaces for each plot.
-            Each element should have the shape of (X.size, 2).
-            If this is an array, then the shape must be (n_surf, X.size, 2).
-        colors (List[str]):
-            The colors of each plot
-        labels (List[str]):
-            The labels of each plot.
-        larger_is_better_objectives (Optional[List[int]]):
-            The indices of the objectives that are better when the values are larger.
-            If None, we consider all objectives are better when they are smaller.
-        log_scale (Optional[List[int]]):
-            The indices of the log scale.
-            For example, if you would like to plot the first objective in the log scale,
-            you need to feed log_scale=[0].
-            In principle, log_scale changes the minimum value of the axes
-            from -np.inf to a small positive value.
-        kwargs:
-            The kwargs for scatter.
-    """
-    plot_kwargs = dict(
-        larger_is_better_objectives=larger_is_better_objectives,
-        log_scale=log_scale,
-    )
-    lines: List[Any] = []
-    emp_att_surfs_list, X_min, X_max, Y_min, Y_max = _transform_surface_list(emp_att_surfs_list, log_scale)
-    for surf, color, label in zip(emp_att_surfs_list, colors, labels):
-        line = plot_surface(ax, surf, color, label, **plot_kwargs)
-        lines.append(line)
+            lb = LOGEPS if self.y_is_log else -np.inf
+            surf[..., 1][surf[..., 1] == lb] = self.y_min
+            surf[..., 1][surf[..., 1] == np.inf] = self.y_max
 
-    ax.set_xlim(X_min, X_max)
-    ax.set_ylim(Y_min, Y_max)
-    return lines
+        return surfs_list
 
+    def plot_surface(
+        self, ax: plt.Axes, surf: np.ndarray, color: str, label: str, transform: bool = True, **kwargs: Any
+    ) -> Any:
+        """
+        Plot multiple surfaces.
 
-def plot_surface_with_band(
-    ax: plt.Axes,
-    emp_att_surfs: np.ndarray,
-    color: str,
-    label: str,
-    larger_is_better_objectives: Optional[List[int]] = None,
-    log_scale: Optional[List[int]] = None,
-    **kwargs: Any,
-) -> Any:
-    """
-    Plot the surface with a band.
-    Typically, we would like to plot median with the band between
-    25% -- 75% percentile attainment surfaces.
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            surf (np.ndarray):
+                The vertices of the empirical attainment surface.
+                The shape must be (X.size, 2).
+            color (str):
+                The color of the plot
+            label (str):
+                The label of the plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        if len(surf.shape) != 2 or surf.shape[1] != 2:
+            raise ValueError(f"The shape of surf must be (n_points, 2), but got {surf.shape}")
 
-    Args:
-        ax (plt.Axes):
-            The subplots axes.
-        emp_att_surfs (np.ndarray):
-            The vertices of the empirical attainment surfaces for each level.
-            If emp_att_surf[i, j, 1] takes np.inf, this is not actually on the surface.
-            The shape is (3, X.size, 2).
-        colors (str):
-            The color of the plot
-        label (str):
-            The label of the plot.
-        larger_is_better_objectives (Optional[List[int]]):
-            The indices of the objectives that are better when the values are larger.
-            If None, we consider all objectives are better when they are smaller.
-        log_scale (Optional[List[int]]):
-            The indices of the log scale.
-            For example, if you would like to plot the first objective in the log scale,
-            you need to feed log_scale=[0].
-            In principle, log_scale changes the minimum value of the axes
-            from -np.inf to a small positive value.
-        kwargs:
-            The kwargs for scatter.
-    """
-    if emp_att_surfs.shape[0] != 3:
-        raise ValueError(f"plot_surface_with_band requires three levels, but got only {emp_att_surfs.shape[0]} levels")
+        if transform:
+            surf = self._transform_surface_list(surfs_list=[surf])[0]
+            ax.set_xlim(self.x_min, self.x_max)
+            ax.set_ylim(self.y_min, self.y_max)
 
-    emp_att_surfs, x_min, x_max, y_min, y_max = _transform_attainment_surface(emp_att_surfs, log_scale)
-    ax.set_xlim((x_min, x_max))
-    ax.set_ylim((y_min, y_max))
+        kwargs.update(drawstyle=f"steps-{self.step_dir}")
+        _check_surface(surf)
+        X, Y = surf[:, 0], surf[:, 1]
+        line = ax.plot(X, Y, color=color, label=label, **kwargs)
+        _change_scale(ax, self.log_scale)
+        return line
 
-    _check_surface(emp_att_surfs[0])
-    surf_lower = emp_att_surfs[0]
-    _check_surface(emp_att_surfs[1])
-    surf_med = emp_att_surfs[1]
-    _check_surface(emp_att_surfs[2])
-    surf_upper = emp_att_surfs[2]
+    def plot_multiple_surface(
+        self,
+        ax: plt.Axes,
+        surfs: Union[np.ndarray, List[np.ndarray]],
+        colors: List[str],
+        labels: List[str],
+        **kwargs: Any,
+    ) -> List[Any]:
+        """
+        Plot multiple surfaces.
 
-    X = surf_lower[:, 0]
-    step_dir = _step_direction(larger_is_better_objectives)
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            surfs (Union[np.ndarray, List[np.ndarray]]):
+                The vertices of the empirical attainment surfaces for each plot.
+                Each element should have the shape of (X.size, 2).
+                If this is an array, then the shape must be (n_surf, X.size, 2).
+            colors (List[str]):
+                The colors of each plot
+            labels (List[str]):
+                The labels of each plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        lines: List[Any] = []
+        surfs = self._transform_surface_list(surfs)
+        for surf, color, label in zip(surfs, colors, labels):
+            line = self.plot_surface(ax, surf, color, label, transform=False, **kwargs)
+            lines.append(line)
 
-    (line,) = ax.plot(X, surf_med[:, 1], color=color, label=label, drawstyle=f"steps-{step_dir}", **kwargs)
-    ax.fill_between(X, surf_lower[:, 1], surf_upper[:, 1], color=color, alpha=0.2, step=step_dir, **kwargs)
-    _change_scale(ax, log_scale)
-    return line
+        ax.set_xlim(self.x_min, self.x_max)
+        ax.set_ylim(self.y_min, self.y_max)
+        return lines
 
+    def plot_surface_with_band(
+        self,
+        ax: plt.Axes,
+        surfs: np.ndarray,
+        color: str,
+        label: str,
+        transform: bool = True,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Plot the surface with a band.
+        Typically, we would like to plot median with the band between
+        25% -- 75% percentile attainment surfaces.
 
-def plot_multiple_surface_with_band(
-    ax: plt.Axes,
-    emp_att_surfs_list: Union[np.ndarray, List[np.ndarray]],
-    colors: List[str],
-    labels: List[str],
-    larger_is_better_objectives: Optional[List[int]] = None,
-    log_scale: Optional[List[int]] = None,
-    **kwargs: Any,
-) -> List[Any]:
-    """
-    Plot multiple surfaces.
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            surfs (np.ndarray):
+                The vertices of the empirical attainment surfaces for each level.
+                If surf[i, j, 1] takes np.inf, this is not actually on the surface.
+                The shape is (3, X.size, 2).
+            colors (str):
+                The color of the plot
+            label (str):
+                The label of the plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        if surfs.shape[0] != 3:
+            raise ValueError(f"plot_surface_with_band requires three levels, but got only {surfs.shape[0]} levels")
+        if transform:
+            surfs = self._transform_surface_list(surfs_list=surfs)
+            ax.set_xlim(self.x_min, self.x_max)
+            ax.set_ylim(self.y_min, self.y_max)
 
-    Args:
-        ax (plt.Axes):
-            The subplots axes.
-        emp_att_surfs_list (Union[np.ndarray, List[np.ndarray]]):
-            The vertices of the empirical attainment surfaces for each plot.
-            Each element should have the shape of (3, X.size, 2).
-            If this is an array, then the shape must be (n_surf, 3, X.size, 2).
-        colors (List[str]):
-            The colors of each plot
-        labels (List[str]):
-            The labels of each plot.
-        larger_is_better_objectives (Optional[List[int]]):
-            The indices of the objectives that are better when the values are larger.
-            If None, we consider all objectives are better when they are smaller.
-        log_scale (Optional[List[int]]):
-            The indices of the log scale.
-            For example, if you would like to plot the first objective in the log scale,
-            you need to feed log_scale=[0].
-            In principle, log_scale changes the minimum value of the axes
-            from -np.inf to a small positive value.
-        kwargs:
-            The kwargs for scatter.
-    """
-    plot_kwargs = dict(
-        larger_is_better_objectives=larger_is_better_objectives,
-        log_scale=log_scale,
-    )
-    lines: List[Any] = []
-    emp_att_surfs_list, X_min, X_max, Y_min, Y_max = _transform_surface_list(emp_att_surfs_list, log_scale)
-    for surf, color, label in zip(emp_att_surfs_list, colors, labels):
-        line = plot_surface_with_band(ax, surf, color, label, **plot_kwargs)
-        lines.append(line)
+        for surf in surfs:
+            _check_surface(surf)
 
-    ax.set_xlim(X_min, X_max)
-    ax.set_ylim(Y_min, Y_max)
-    return lines
+        X = surfs[0, :, 0]
+        line = ax.plot(X, surfs[1, :, 1], color=color, label=label, drawstyle=f"steps-{self.step_dir}", **kwargs)
+        ax.fill_between(X, surfs[0, :, 1], surfs[2, :, 1], color=color, alpha=0.2, step=self.step_dir, **kwargs)
+        _change_scale(ax, self.log_scale)
+        return line
+
+    def plot_multiple_surface_with_band(
+        self,
+        ax: plt.Axes,
+        surfs_list: Union[np.ndarray, List[np.ndarray]],
+        colors: List[str],
+        labels: List[str],
+        **kwargs: Any,
+    ) -> List[Any]:
+        """
+        Plot multiple surfaces.
+
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            surfs_list (Union[np.ndarray, List[np.ndarray]]):
+                The vertices of the empirical attainment surfaces for each plot.
+                Each element should have the shape of (3, X.size, 2).
+                If this is an array, then the shape must be (n_surf, 3, X.size, 2).
+            colors (List[str]):
+                The colors of each plot
+            labels (List[str]):
+                The labels of each plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        lines: List[Any] = []
+        surfs_list = self._transform_surface_list(surfs_list)
+        for surf, color, label in zip(surfs_list, colors, labels):
+            line = self.plot_surface_with_band(ax, surf, color, label, transform=False, **kwargs)
+            lines.append(line)
+
+        ax.set_xlim(self.x_min, self.x_max)
+        ax.set_ylim(self.y_min, self.y_max)
+        return lines

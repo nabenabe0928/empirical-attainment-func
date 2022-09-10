@@ -2,18 +2,28 @@ from typing import List, Optional, Tuple
 
 from fast_pareto.pareto import _change_directions
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 
 
 LOGEPS = 1e-300
 
 
-def _transform_attainment_surface(
-    emp_att_surfs: np.ndarray,
-    log_scale: Optional[List[int]],
-) -> Tuple[np.ndarray, float, float, float, float]:
-    X = emp_att_surfs[..., 0].flatten()
-    Y = emp_att_surfs[..., 1].flatten()
+def _change_scale(ax: plt.Axes, log_scale: Optional[List[int]]) -> None:
+    log_scale = [] if log_scale is None else log_scale
+    if 0 in log_scale:
+        ax.set_xscale("log")
+    if 1 in log_scale:
+        ax.set_yscale("log")
+
+
+def _get_slighly_expanded_value_range(
+    costs: np.ndarray,
+    log_scale: Optional[List[int]] = None,
+) -> Tuple[float, float, float, float]:
+    X = costs[..., 0].flatten()
+    Y = costs[..., 1].flatten()
     log_scale = log_scale if log_scale is not None else []
     x_is_log, y_is_log = 0 in log_scale, 1 in log_scale
 
@@ -28,39 +38,7 @@ def _transform_attainment_surface(
     y_max += 0.1 * (y_max - y_min)
     (x_min, x_max) = (np.exp(x_min), np.exp(x_max)) if x_is_log else (x_min, x_max)
     (y_min, y_max) = (np.exp(y_min), np.exp(y_max)) if y_is_log else (y_min, y_max)
-
-    lb = LOGEPS if x_is_log else -np.inf
-    emp_att_surfs[..., 0][emp_att_surfs[..., 0] == lb] = x_min
-    emp_att_surfs[..., 0][emp_att_surfs[..., 0] == np.inf] = x_max
-
-    lb = LOGEPS if y_is_log else -np.inf
-    emp_att_surfs[..., 1][emp_att_surfs[..., 1] == LOGEPS] = y_min
-    emp_att_surfs[..., 1][emp_att_surfs[..., 1] == np.inf] = y_max
-
-    return emp_att_surfs, x_min, x_max, y_min, y_max
-
-
-def _transform_surface_list(
-    emp_att_surfs_list: List[np.ndarray],
-    log_scale: Optional[List[int]],
-) -> Tuple[List[np.ndarray], float, float, float, float]:
-    X_min, X_max, Y_min, Y_max = np.inf, -np.inf, np.inf, -np.inf
-    for surf in emp_att_surfs_list:
-        _, x_min, x_max, y_min, y_max = _transform_attainment_surface(surf.copy(), log_scale)
-        X_min, X_max, Y_min, Y_max = min(X_min, x_min), max(X_max, x_max), min(Y_min, y_min), max(Y_max, y_max)
-
-    log_scale = [] if log_scale is None else log_scale
-    x_is_log, y_is_log = 0 in log_scale, 1 in log_scale
-    for surf in emp_att_surfs_list:
-        lb = LOGEPS if x_is_log else -np.inf
-        surf[..., 0][surf[..., 0] == lb] = X_min
-        surf[..., 0][surf[..., 0] == np.inf] = X_max
-
-        lb = LOGEPS if y_is_log else -np.inf
-        surf[..., 1][surf[..., 1] == LOGEPS] = Y_min
-        surf[..., 1][surf[..., 1] == np.inf] = Y_max
-
-    return emp_att_surfs_list, X_min, X_max, Y_min, Y_max
+    return x_min, x_max, y_min, y_max
 
 
 def pareto_front_to_surface(
@@ -116,12 +94,13 @@ def pareto_front_to_surface(
         )
 
     log_scale = [] if log_scale is None else log_scale
+    larger_is_better_objectives = [] if larger_is_better_objectives is None else larger_is_better_objectives
     x_min = max(LOGEPS, x_min) if 0 in log_scale else x_min
+    maximize_x = 0 in larger_is_better_objectives
     y_min = max(LOGEPS, y_min) if 1 in log_scale else y_min
+    maximize_y = 1 in larger_is_better_objectives
 
     (n_sols, n_obj) = pareto_front.shape
-    larger_is_better_objectives = [] if larger_is_better_objectives is None else larger_is_better_objectives
-    maximize_x, maximize_y = 0 in larger_is_better_objectives, 1 in larger_is_better_objectives
 
     modified_pf = np.empty((n_sols + 2, n_obj))
     modified_pf[1:-1] = pareto_front
