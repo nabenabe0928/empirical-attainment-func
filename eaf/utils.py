@@ -38,6 +38,29 @@ def _transform_attainment_surface(
     return emp_att_surfs, x_min, x_max, y_min, y_max
 
 
+def _transform_surface_list(
+    emp_att_surfs_list: List[np.ndarray],
+    log_scale: Optional[List[int]],
+) -> Tuple[List[np.ndarray], float, float, float, float]:
+    X_min, X_max, Y_min, Y_max = np.inf, -np.inf, np.inf, -np.inf
+    for surf in emp_att_surfs_list:
+        _, x_min, x_max, y_min, y_max = _transform_attainment_surface(surf.copy(), log_scale)
+        X_min, X_max, Y_min, Y_max = min(X_min, x_min), max(X_max, x_max), min(Y_min, y_min), max(Y_max, y_max)
+
+    log_scale = [] if log_scale is None else log_scale
+    x_is_log, y_is_log = 0 in log_scale, 1 in log_scale
+    for surf in emp_att_surfs_list:
+        lb = LOGEPS if x_is_log else -np.inf
+        surf[..., 0][surf[..., 0] == lb] = X_min
+        surf[..., 0][surf[..., 0] == np.inf] = X_max
+
+        lb = LOGEPS if y_is_log else -np.inf
+        surf[..., 1][surf[..., 1] == LOGEPS] = Y_min
+        surf[..., 1][surf[..., 1] == np.inf] = Y_max
+
+    return emp_att_surfs_list, X_min, X_max, Y_min, Y_max
+
+
 def _check_surface(surf: np.ndarray) -> np.ndarray:
     if len(surf.shape) != 2:
         raise ValueError(f"The shape of surf must be (n_points, n_obj), but got {surf.shape}")
