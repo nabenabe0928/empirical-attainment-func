@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 
 from eaf import get_empirical_attainment_surface, plot_surface, plot_surface_with_band
-from eaf.plot_surface import _step_direction
+from eaf.plot_surface import _check_surface, _step_direction
 
 
 def func(X: np.ndarray) -> np.ndarray:
@@ -27,6 +27,25 @@ def test_step_direction() -> None:
     assert _step_direction(larger_is_better_objectives) == "pre"
     larger_is_better_objectives = [0, 1]
     assert _step_direction(larger_is_better_objectives) == "pre"
+
+
+def test_check_surface():
+    surf = np.arange(4 * 3 * 2).reshape((4, 3, 2))
+    with pytest.raises(ValueError):
+        _check_surface(surf)
+
+    surf = np.arange(3 * 2).reshape((3, 2))
+    _check_surface(surf)
+
+    surf = np.random.random((30, 2))
+    with pytest.raises(ValueError):
+        _check_surface(surf)
+
+    _, ax = plt.subplots()
+    with pytest.raises(ValueError):
+        plot_surface(ax, np.random.random((10, 30, 2)), colors=["red"] * 10, labels=["dummy"] * 10)
+    with pytest.raises(ValueError):
+        plot_surface_with_band(ax, np.random.random((3, 30, 2)), color="red", label="dummy")
 
 
 def test_plot() -> None:

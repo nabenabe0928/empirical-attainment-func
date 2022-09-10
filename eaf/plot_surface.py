@@ -42,6 +42,15 @@ def _transform_attainment_surface(
     return emp_att_surfs, x_min, x_max, y_min, y_max
 
 
+def _check_surface(surf: np.ndarray) -> np.ndarray:
+    if len(surf.shape) != 2:
+        raise ValueError(f"The shape of surf must be (n_points, n_obj), but got {surf.shape}")
+
+    X = surf[:, 0]
+    if np.any(np.maximum.accumulate(X) != X):
+        raise ValueError("The axis [:, 0] of surf must be an increasing sequence")
+
+
 def _step_direction(larger_is_better_objectives: Optional[List[int]]) -> str:
     """
     Check here:
@@ -100,7 +109,7 @@ def plot_surface(
         emp_att_surfs (np.ndarray):
             The vertices of the empirical attainment surfaces for each level.
             If emp_att_surf[i, j, 1] takes np.inf, this is not actually on the surface.
-            The shape is (levels.size, X.size, 2).
+            The shape is (n_surfaces, X.size, 2).
         colors (List[str]):
             The colors of each plot
         labels (List[str]):
@@ -119,12 +128,8 @@ def plot_surface(
     kwargs.update(drawstyle=f"steps-{step_dir}")
     lines = []
     for color, label, emp_att_surf in zip(colors, labels, emp_att_surfs):
-        X = emp_att_surf[:, 0]
-        Y = emp_att_surf[:, 1]
-        asc = X[0] <= X[-1]
-        X = X if asc else X[::-1]
-        Y = Y if asc else Y[::-1]
-        line, = ax.plot(X, Y, color=color, label=label, **kwargs)
+        _check_surface(emp_att_surf)
+        (line,) = ax.plot(emp_att_surf[..., 0], emp_att_surf[..., 1], color=color, label=label, **kwargs)
 
         lines.append(line)
 
@@ -169,15 +174,16 @@ def plot_surface_with_band(
     ax.set_xlim((x_min, x_max))
     ax.set_ylim((y_min, y_max))
 
-    dx = emp_att_surfs[0, :, 0]
-    asc = dx[0] <= dx[-1]
+    _check_surface(emp_att_surfs[0])
+    surf_lower = emp_att_surfs[0]
+    _check_surface(emp_att_surfs[1])
+    surf_med = emp_att_surfs[1]
+    _check_surface(emp_att_surfs[2])
+    surf_upper = emp_att_surfs[2]
 
-    dx = dx if asc else dx[::-1]
-    q0 = emp_att_surfs[0, :, 1] if asc else emp_att_surfs[0, :, 1][::-1]
-    m = emp_att_surfs[1, :, 1] if asc else emp_att_surfs[1, :, 1][::-1]
-    q1 = emp_att_surfs[-1, :, 1] if asc else emp_att_surfs[-1, :, 1][::-1]
+    X = surf_lower[:, 0]
     step_dir = _step_direction(larger_is_better_objectives)
 
-    line, = ax.plot(dx, m, color=color, label=label, drawstyle=f"steps-{step_dir}", **kwargs)
-    ax.fill_between(dx, q0, q1, color=color, alpha=0.2, step=step_dir, **kwargs)
+    (line,) = ax.plot(X, surf_med[:, 1], color=color, label=label, drawstyle=f"steps-{step_dir}", **kwargs)
+    ax.fill_between(X, surf_lower[:, 1], surf_upper[:, 1], color=color, alpha=0.2, step=step_dir, **kwargs)
     return line
