@@ -6,7 +6,13 @@ import pytest
 
 import numpy as np
 
-from eaf import get_empirical_attainment_surface, plot_surface, plot_surface_with_band
+from eaf import (
+    get_empirical_attainment_surface,
+    plot_multiple_surface,
+    plot_multiple_surface_with_band,
+    plot_surface,
+    plot_surface_with_band,
+)
 
 
 def func(X: np.ndarray) -> np.ndarray:
@@ -26,7 +32,15 @@ def test_plot() -> None:
     emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
-    plot_surface(ax, colors=colors, labels=labels, emp_att_surfs=emp_att_surfs)
+    plot_multiple_surface(ax, colors=colors, labels=labels, emp_att_surfs_list=emp_att_surfs)
+    plot_surface(ax, color=colors[0], label=labels[0], emp_att_surf=emp_att_surfs[0])
+    # test log scale
+    plot_surface(ax, color=colors[0], label=labels[0], emp_att_surf=emp_att_surfs[0], log_scale=[0, 1])
+
+    with pytest.raises(ValueError):
+        # shape error
+        plot_surface(ax, color=colors[0], label=labels[0], emp_att_surf=emp_att_surfs)
+
     ax.legend()
     ax.grid()
     plt.close()
@@ -42,6 +56,9 @@ def test_plot_with_band() -> None:
 
     _, ax = plt.subplots()
     plot_surface_with_band(ax, color="red", label="random", emp_att_surfs=emp_att_surfs)
+    plot_multiple_surface_with_band(
+        ax, colors=["red"] * 2, labels=["random"] * 2, emp_att_surfs_list=[emp_att_surfs] * 2
+    )
     ax.legend()
     ax.grid()
     plt.close()

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from eaf import get_empirical_attainment_surface, plot_surface
+from eaf import get_empirical_attainment_surface, plot_multiple_surface
 from examples.toy_func import func
 
 
@@ -17,6 +17,6 @@ if __name__ == "__main__":
     emp_att_surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
-    plot_surface(ax, colors=colors, labels=labels, emp_att_surfs=emp_att_surfs)
+    plot_multiple_surface(ax, colors=colors, labels=labels, emp_att_surfs_list=emp_att_surfs)
     ax.grid()
     plt.show()

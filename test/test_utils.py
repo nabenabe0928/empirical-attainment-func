@@ -63,7 +63,7 @@ def test_check_surface():
 
     _, ax = plt.subplots()
     with pytest.raises(ValueError):
-        plot_surface(ax, np.random.random((10, 30, 2)), colors=["red"] * 10, labels=["dummy"] * 10)
+        plot_surface(ax, np.random.random((30, 2)), color="red", label="dummy")
     with pytest.raises(ValueError):
         plot_surface_with_band(ax, np.random.random((3, 30, 2)), color="red", label="dummy")
 
