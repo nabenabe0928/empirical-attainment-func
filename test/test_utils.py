@@ -1,13 +1,92 @@
 import unittest
 
+from fast_pareto import is_pareto_front
+
 import matplotlib.pyplot as plt
 
 import pytest
 
 import numpy as np
 
-from eaf import plot_surface, plot_surface_with_band
+from eaf import pareto_front_to_surface, plot_surface, plot_surface_with_band
 from eaf.utils import LOGEPS, _check_surface, _step_direction, _transform_attainment_surface
+
+
+def func(X: np.ndarray) -> np.ndarray:
+    f1 = np.sum(X**2, axis=-1)
+    f2 = np.sum((X - 2) ** 2, axis=-1)
+    return np.stack([f1, f2], axis=-1)
+
+
+def get_dummy_dataset() -> np.ndarray:
+    dim, n_samples = 2, 300
+    X = np.random.random((n_samples, dim)) * 10 - 5
+    costs = func(X)
+    return costs
+
+
+def test_raise_errors_in_pareto_front_to_surface() -> None:
+    with pytest.raises(ValueError):
+        costs = get_dummy_dataset()
+        pareto_front = costs[is_pareto_front(costs)]
+        # Shape error
+        pareto_front_to_surface(pareto_front[None])
+
+    with pytest.raises(ValueError):
+        costs = get_dummy_dataset()
+        pareto_front = costs[is_pareto_front(costs)]
+        pareto_front[0, 0] = 1000
+        # Out of bound error
+        pareto_front_to_surface(pareto_front, x_max=100)
+
+
+def test_values_in_pareto_front_to_surface() -> None:
+    costs = get_dummy_dataset()
+    pareto_front = costs[is_pareto_front(costs)]
+    modified_pf = pareto_front_to_surface(pareto_front, x_min=0, x_max=100, y_min=0, y_max=100)
+    assert modified_pf[0, 0] == 0
+    assert modified_pf[0, 1] == 100
+    assert modified_pf[-1, 0] == 100
+    assert modified_pf[-1, 1] == 0
+
+    modified_pf = pareto_front_to_surface(pareto_front, x_max=100, y_max=100, log_scale=[0])
+    assert modified_pf[0, 0] == LOGEPS
+    assert modified_pf[0, 1] == 100
+    assert modified_pf[-1, 0] == 100
+    assert modified_pf[-1, 1] == -np.inf
+
+
+def test_pareto_front_to_surface() -> None:
+    costs = get_dummy_dataset()
+    pareto_front = costs[is_pareto_front(costs)]
+    modified_pf = pareto_front_to_surface(pareto_front)
+    assert np.allclose(np.maximum.accumulate(modified_pf[:, 0]), modified_pf[:, 0])
+    assert np.allclose(np.minimum.accumulate(modified_pf[:, 1]), modified_pf[:, 1])
+
+    costs = get_dummy_dataset()
+    costs[:, 0] *= -1
+    costs[:, 1] *= -1
+    kwargs = dict(larger_is_better_objectives=[0, 1])
+    pareto_front = costs[is_pareto_front(costs, **kwargs)]
+    modified_pf = pareto_front_to_surface(pareto_front, **kwargs)
+    assert np.allclose(np.maximum.accumulate(modified_pf[:, 0]), modified_pf[:, 0])
+    assert np.allclose(np.minimum.accumulate(modified_pf[:, 1]), modified_pf[:, 1])
+
+    costs = get_dummy_dataset()
+    costs[:, 0] *= -1
+    kwargs = dict(larger_is_better_objectives=[0])
+    pareto_front = costs[is_pareto_front(costs, **kwargs)]
+    modified_pf = pareto_front_to_surface(pareto_front, **kwargs)
+    assert np.allclose(np.maximum.accumulate(modified_pf[:, 0]), modified_pf[:, 0])
+    assert np.allclose(np.maximum.accumulate(modified_pf[:, 1]), modified_pf[:, 1])
+
+    costs = get_dummy_dataset()
+    costs[:, 1] *= -1
+    kwargs = dict(larger_is_better_objectives=[1])
+    pareto_front = costs[is_pareto_front(costs, **kwargs)]
+    modified_pf = pareto_front_to_surface(pareto_front, **kwargs)
+    assert np.allclose(np.maximum.accumulate(modified_pf[:, 0]), modified_pf[:, 0])
+    assert np.allclose(np.maximum.accumulate(modified_pf[:, 1]), modified_pf[:, 1])
 
 
 def test_transform_attainment_surface() -> None:

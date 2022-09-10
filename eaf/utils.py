@@ -1,5 +1,7 @@
 from typing import List, Optional, Tuple
 
+from fast_pareto.pareto import _change_directions
+
 import numpy as np
 
 
@@ -59,6 +61,86 @@ def _transform_surface_list(
         surf[..., 1][surf[..., 1] == np.inf] = Y_max
 
     return emp_att_surfs_list, X_min, X_max, Y_min, Y_max
+
+
+def pareto_front_to_surface(
+    pareto_front: np.ndarray,
+    larger_is_better_objectives: Optional[List[int]] = None,
+    log_scale: Optional[List[int]] = None,
+    x_min: float = -np.inf,
+    x_max: float = np.inf,
+    y_min: float = -np.inf,
+    y_max: float = np.inf,
+) -> np.ndarray:
+    """
+    Convert Pareto front set to a surface array.
+
+    Args:
+        pareto_front (np.ndarray):
+            The raw pareto front solution with the shape of (n_sols, n_obj).
+        larger_is_better_objectives (Optional[List[int]]):
+            The indices of the objectives that are better when the values are larger.
+            If None, we consider all objectives are better when they are smaller.
+        log_scale (Optional[List[int]]):
+            The indices of the log scale.
+            For example, if you would like to plot the first objective in the log scale,
+            you need to feed log_scale=[0].
+            In principle, log_scale changes the minimum value of the axes
+            from -np.inf to a small positive value.
+        x_min (float):
+            The lower bound of the first objective.
+        x_max (float):
+            The upper bound of the first objective.
+        y_min (float):
+            The er bound of the second objective.
+        y_max (float):
+            The er bound of the second objective.
+
+    Returns:
+        modified_pareto_front (np.ndarray):
+            The modified pareto front solution with the shape of (n_sols + 2, n_obj).
+            The head and tail of this array is now the specified bounds.
+            Also this array is now sorted with respect to the first objective.
+    """
+    if len(pareto_front.shape) != 2:
+        raise ValueError(f"The shape of pareto_front must be (n_sols, n_obj), but got {pareto_front.shape}")
+    if (
+        not np.all(x_min <= pareto_front[:, 0])
+        or not np.all(pareto_front[:, 0] <= x_max)
+        or not np.all(y_min <= pareto_front[:, 1])
+        or not np.all(pareto_front[:, 1] <= y_max)
+    ):
+        raise ValueError(
+            f"pareto_front must be in for [{x_min}, {x_max}] the first objective and "
+            f"[{y_min}, {y_max}] for the second objective, but got {pareto_front}"
+        )
+
+    log_scale = [] if log_scale is None else log_scale
+    x_min = max(LOGEPS, x_min) if 0 in log_scale else x_min
+    y_min = max(LOGEPS, y_min) if 1 in log_scale else y_min
+
+    (n_sols, n_obj) = pareto_front.shape
+    larger_is_better_objectives = [] if larger_is_better_objectives is None else larger_is_better_objectives
+    maximize_x, maximize_y = 0 in larger_is_better_objectives, 1 in larger_is_better_objectives
+
+    modified_pf = np.empty((n_sols + 2, n_obj))
+    modified_pf[1:-1] = pareto_front
+    modified_pf[0] = [x_min, y_min] if (maximize_x ^ maximize_y) else [x_min, y_max]
+    modified_pf[-1] = [x_max, y_max] if (maximize_x ^ maximize_y) else [x_max, y_min]
+
+    if len(larger_is_better_objectives) > 0:
+        modified_pf = _change_directions(modified_pf, larger_is_better_objectives=larger_is_better_objectives)
+
+    # Sort by the first objective, then the second objective
+    order = np.lexsort((modified_pf[:, 1], modified_pf[:, 0]))
+    modified_pf = modified_pf[order]
+
+    if len(larger_is_better_objectives) > 0:
+        modified_pf = _change_directions(modified_pf, larger_is_better_objectives=larger_is_better_objectives)
+    if maximize_x:
+        modified_pf = np.flip(modified_pf, axis=0)
+
+    return modified_pf
 
 
 def _check_surface(surf: np.ndarray) -> np.ndarray:

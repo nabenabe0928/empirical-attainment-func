@@ -5,9 +5,10 @@ from eaf.plot_surface import (
     plot_surface,
     plot_surface_with_band,
 )
+from eaf.utils import pareto_front_to_surface
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __copyright__ = "Copyright (C) 2022 Shuhei Watanabe"
 __licence__ = "Apache-2.0 License"
 __author__ = "Shuhei Watanabe"
@@ -17,6 +18,7 @@ __url__ = "https://github.com/nabenabe0928/empirical-attainment-func"
 
 __all__ = [
     "get_empirical_attainment_surface",
+    "pareto_front_to_surface",
     "plot_multiple_surface",
     "plot_multiple_surface_with_band",
     "plot_surface",
