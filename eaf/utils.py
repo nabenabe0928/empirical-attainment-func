@@ -132,7 +132,7 @@ def pareto_front_to_surface(
         modified_pf = _change_directions(modified_pf, larger_is_better_objectives=larger_is_better_objectives)
 
     # Sort by the first objective, then the second objective
-    order = np.lexsort((modified_pf[:, 1], modified_pf[:, 0]))
+    order = np.lexsort((-modified_pf[:, 1], modified_pf[:, 0]))
     modified_pf = modified_pf[order]
 
     if len(larger_is_better_objectives) > 0:
