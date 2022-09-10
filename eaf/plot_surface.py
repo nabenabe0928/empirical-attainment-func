@@ -58,7 +58,9 @@ class EmpiricalAttainmentFuncPlot:
         )
 
         if true_pareto_sols is not None:
-            self.x_min, self.x_max, self.y_min, self.y_max = _get_slighly_expanded_value_range(true_pareto_sols)
+            self.x_min, self.x_max, self.y_min, self.y_max = _get_slighly_expanded_value_range(
+                true_pareto_sols, self.log_scale
+            )
             self.true_pareto_surf = pareto_front_to_surface(
                 true_pareto_sols,
                 x_min=self.x_min,
