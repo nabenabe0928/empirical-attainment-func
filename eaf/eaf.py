@@ -1,5 +1,7 @@
 from typing import List, Optional
 
+from eaf.utils import LOGEPS
+
 from fast_pareto import is_pareto_front
 from fast_pareto.pareto import _change_directions
 
@@ -103,6 +105,7 @@ def get_empirical_attainment_surface(
     costs: np.ndarray,
     levels: List[int],
     larger_is_better_objectives: Optional[List[int]] = None,
+    log_scale: Optional[List[int]] = None,
 ) -> np.ndarray:
     """
     Get the empirical attainment surface given the costs observations.
@@ -124,6 +127,12 @@ def get_empirical_attainment_surface(
         larger_is_better_objectives (Optional[List[int]]):
             The indices of the objectives that are better when the values are larger.
             If None, we consider all objectives are better when they are smaller.
+        log_scale (Optional[List[int]]):
+            The indices of the log scale.
+            For example, if you would like to plot the first objective in the log scale,
+            you need to feed log_scale=[0].
+            In principle, log_scale changes the minimum value of the axes
+            from -np.inf to a small positive value.
 
     Returns:
         emp_att_surfs (np.ndarray):
@@ -147,9 +156,10 @@ def get_empirical_attainment_surface(
     if larger_is_better_objectives is not None:
         costs = _change_directions(costs, larger_is_better_objectives=larger_is_better_objectives)
 
+    log_scale = log_scale if log_scale is not None else []
     pf_set_list = _get_pf_set_list(costs)
     pf_sols = np.vstack(pf_set_list)
-    X = np.unique(np.hstack([-np.inf, pf_sols[:, 0], np.inf]))
+    X = np.unique(np.hstack([LOGEPS if 0 in log_scale else -np.inf, pf_sols[:, 0], np.inf]))
 
     emp_att_surfs = _compute_emp_att_surf(X=X, pf_set_list=pf_set_list, levels=np.asarray(levels))
     if larger_is_better_objectives is not None:

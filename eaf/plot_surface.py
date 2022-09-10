@@ -33,6 +33,12 @@ def plot_surface(
         larger_is_better_objectives (Optional[List[int]]):
             The indices of the objectives that are better when the values are larger.
             If None, we consider all objectives are better when they are smaller.
+        log_scale (Optional[List[int]]):
+            The indices of the log scale.
+            For example, if you would like to plot the first objective in the log scale,
+            you need to feed log_scale=[0].
+            In principle, log_scale changes the minimum value of the axes
+            from -np.inf to a small positive value.
         kwargs:
             The kwargs for scatter.
     """
@@ -80,6 +86,12 @@ def plot_surface_with_band(
         larger_is_better_objectives (Optional[List[int]]):
             The indices of the objectives that are better when the values are larger.
             If None, we consider all objectives are better when they are smaller.
+        log_scale (Optional[List[int]]):
+            The indices of the log scale.
+            For example, if you would like to plot the first objective in the log scale,
+            you need to feed log_scale=[0].
+            In principle, log_scale changes the minimum value of the axes
+            from -np.inf to a small positive value.
         kwargs:
             The kwargs for scatter.
     """
