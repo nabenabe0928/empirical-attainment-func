@@ -96,14 +96,14 @@ def test_get_empirical_attainment_surface() -> None:
                 get_empirical_attainment_surface(costs, levels=[level])
 
     emp_att_surfs = get_empirical_attainment_surface(costs, levels=[1], larger_is_better_objectives=[0])
-    assert np.all(emp_att_surfs[:, :-1, :] >= 0)
+    assert np.all(emp_att_surfs[:, 1:, :] >= 0)
     costs = np.array([[[0, 1], [1, 0], [2, 2]]])
     sol = get_empirical_attainment_surface(costs, levels=[1], larger_is_better_objectives=[0])
-    ans = np.array([[2, np.inf], [2, 2], [1, 0], [-np.inf, 0]])
+    ans = np.array([[-np.inf, 0], [1, 0], [2, 2], [2, np.inf]])
     assert np.allclose(sol, ans)
 
     sol = get_empirical_attainment_surface(costs, levels=[1], larger_is_better_objectives=[0, 1])
-    ans = np.array([[2, -np.inf], [2, 2], [-np.inf, 2]])
+    ans = np.array([[-np.inf, 2], [2, 2], [2, -np.inf]])
     assert np.allclose(sol, ans)
 
 

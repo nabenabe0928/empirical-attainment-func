@@ -153,6 +153,7 @@ def get_empirical_attainment_surface(
         raise ValueError(f"All elements in levels must be in [1, n_independent_runs], but got {levels}")
     if not np.all(np.maximum.accumulate(levels) == levels):
         raise ValueError(f"levels must be an increasing sequence, but got {levels}")
+
     if larger_is_better_objectives is not None:
         costs = _change_directions(costs, larger_is_better_objectives=larger_is_better_objectives)
 
@@ -164,5 +165,7 @@ def get_empirical_attainment_surface(
     emp_att_surfs = _compute_emp_att_surf(X=X, pf_set_list=pf_set_list, levels=np.asarray(levels))
     if larger_is_better_objectives is not None:
         emp_att_surfs = _change_directions(emp_att_surfs, larger_is_better_objectives=larger_is_better_objectives)
+    if larger_is_better_objectives is not None and 0 in larger_is_better_objectives:
+        emp_att_surfs = np.flip(emp_att_surfs, axis=1)
 
     return emp_att_surfs
