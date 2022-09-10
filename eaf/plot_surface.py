@@ -172,6 +172,7 @@ def plot_surface_with_band(
     dx = emp_att_surfs[0, :, 0]
     asc = dx[0] <= dx[-1]
 
+    dx = dx if asc else dx[::-1]
     q0 = emp_att_surfs[0, :, 1] if asc else emp_att_surfs[0, :, 1][::-1]
     m = emp_att_surfs[1, :, 1] if asc else emp_att_surfs[1, :, 1][::-1]
     q1 = emp_att_surfs[-1, :, 1] if asc else emp_att_surfs[-1, :, 1][::-1]
