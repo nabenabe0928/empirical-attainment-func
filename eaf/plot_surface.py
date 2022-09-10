@@ -5,17 +5,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def _transform_attainment_surface(emp_att_surfs: np.ndarray) -> Tuple[np.ndarray, float, float, float, float]:
+def _transform_attainment_surface(
+    emp_att_surfs: np.ndarray,
+    log_scale: Optional[List[int]],
+) -> Tuple[np.ndarray, float, float, float, float]:
     X = emp_att_surfs[..., 0].flatten()
     Y = emp_att_surfs[..., 1].flatten()
     X = X[np.isfinite(X)]
     Y = Y[np.isfinite(Y)]
     (x_min, x_max) = X.min(), X.max()
     (y_min, y_max) = Y.min(), Y.max()
-    x_min -= 0.1 * (x_max - x_min)
-    x_max += 0.1 * (x_max - x_min)
-    y_min -= 0.1 * (y_max - y_min)
-    y_max += 0.1 * (y_max - y_min)
+
+    log_scale = log_scale if log_scale is not None else []
+    if 0 in log_scale:
+        x_min, x_max = np.log(x_min), np.log(x_max)
+        x_min -= 0.1 * (x_max - x_min)
+        x_max += 0.1 * (x_max - x_min)
+        x_min, x_max = np.exp(x_min), np.exp(x_max)
+    else:
+        x_min -= 0.1 * (x_max - x_min)
+        x_max += 0.1 * (x_max - x_min)
+    if 1 in log_scale:
+        y_min, y_max = np.log(y_min), np.log(y_max)
+        y_min -= 0.1 * (y_max - y_min)
+        y_max += 0.1 * (y_max - y_min)
+        y_min, y_max = np.exp(y_min), np.exp(y_max)
+    else:
+        y_min -= 0.1 * (y_max - y_min)
+        y_max += 0.1 * (y_max - y_min)
 
     emp_att_surfs[..., 0][emp_att_surfs[..., 0] == -np.inf] = x_min
     emp_att_surfs[..., 0][emp_att_surfs[..., 0] == np.inf] = x_max
@@ -71,8 +88,9 @@ def plot_surface(
     colors: List[str],
     labels: List[str],
     larger_is_better_objectives: Optional[List[int]] = None,
+    log_scale: Optional[List[int]] = None,
     **kwargs: Any,
-) -> None:
+) -> List[Any]:
     """
     Plot multiple surfaces.
 
@@ -93,14 +111,18 @@ def plot_surface(
         kwargs:
             The kwargs for scatter.
     """
-    emp_att_surfs, x_min, x_max, y_min, y_max = _transform_attainment_surface(emp_att_surfs)
+    emp_att_surfs, x_min, x_max, y_min, y_max = _transform_attainment_surface(emp_att_surfs, log_scale)
     ax.set_xlim((x_min, x_max))
     ax.set_ylim((y_min, y_max))
     step_dir = _step_direction(larger_is_better_objectives)
 
     kwargs.update(drawstyle=f"steps-{step_dir}")
+    lines = []
     for color, label, emp_att_surf in zip(colors, labels, emp_att_surfs):
-        ax.plot(emp_att_surf[:, 0], emp_att_surf[:, 1], color=color, label=label, **kwargs)
+        line, = ax.plot(emp_att_surf[:, 0], emp_att_surf[:, 1], color=color, label=label, **kwargs)
+        lines.append(line)
+
+    return lines
 
 
 def plot_surface_with_band(
@@ -109,8 +131,9 @@ def plot_surface_with_band(
     color: str,
     label: str,
     larger_is_better_objectives: Optional[List[int]] = None,
+    log_scale: Optional[List[int]] = None,
     **kwargs: Any,
-) -> None:
+) -> Any:
     """
     Plot the surface with a band.
     Typically, we would like to plot median with the band between
@@ -136,7 +159,7 @@ def plot_surface_with_band(
     if emp_att_surfs.shape[0] != 3:
         raise ValueError(f"plot_surface_with_band requires three levels, but got only {emp_att_surfs.shape[0]} levels")
 
-    emp_att_surfs, x_min, x_max, y_min, y_max = _transform_attainment_surface(emp_att_surfs)
+    emp_att_surfs, x_min, x_max, y_min, y_max = _transform_attainment_surface(emp_att_surfs, log_scale)
     ax.set_xlim((x_min, x_max))
     ax.set_ylim((y_min, y_max))
 
@@ -146,5 +169,6 @@ def plot_surface_with_band(
     q1 = emp_att_surfs[-1, :, 1]
     step_dir = _step_direction(larger_is_better_objectives)
 
-    ax.plot(dx, m, color=color, label=label, drawstyle=f"steps-{step_dir}", **kwargs)
+    line, = ax.plot(dx, m, color=color, label=label, drawstyle=f"steps-{step_dir}", **kwargs)
     ax.fill_between(dx, q0, q1, color=color, alpha=0.2, step=step_dir, **kwargs)
+    return line
