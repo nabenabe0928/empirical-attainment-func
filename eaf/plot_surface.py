@@ -119,7 +119,13 @@ def plot_surface(
     kwargs.update(drawstyle=f"steps-{step_dir}")
     lines = []
     for color, label, emp_att_surf in zip(colors, labels, emp_att_surfs):
-        line, = ax.plot(emp_att_surf[:, 0], emp_att_surf[:, 1], color=color, label=label, **kwargs)
+        X = emp_att_surf[:, 0]
+        Y = emp_att_surf[:, 1]
+        asc = X[0] <= X[-1]
+        X = X if asc else X[::-1]
+        Y = Y if asc else Y[::-1]
+        line, = ax.plot(X, Y, color=color, label=label, **kwargs)
+
         lines.append(line)
 
     return lines
@@ -164,9 +170,11 @@ def plot_surface_with_band(
     ax.set_ylim((y_min, y_max))
 
     dx = emp_att_surfs[0, :, 0]
-    q0 = emp_att_surfs[0, :, 1]
-    m = emp_att_surfs[1, :, 1]
-    q1 = emp_att_surfs[-1, :, 1]
+    asc = dx[0] <= dx[-1]
+
+    q0 = emp_att_surfs[0, :, 1] if asc else emp_att_surfs[0, :, 1][::-1]
+    m = emp_att_surfs[1, :, 1] if asc else emp_att_surfs[1, :, 1][::-1]
+    q1 = emp_att_surfs[-1, :, 1] if asc else emp_att_surfs[-1, :, 1][::-1]
     step_dir = _step_direction(larger_is_better_objectives)
 
     line, = ax.plot(dx, m, color=color, label=label, drawstyle=f"steps-{step_dir}", **kwargs)
