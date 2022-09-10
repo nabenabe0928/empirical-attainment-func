@@ -126,6 +126,25 @@ class EmpiricalAttainmentFuncPlot:
         _change_scale(ax, self.log_scale)
         return line
 
+    def plot_true_pareto_surface(self, ax: plt.Axes, color: str, label: str, **kwargs: Any) -> None:
+        """
+        Plot multiple surfaces.
+
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            color (str):
+                The color of the plot
+            label (str):
+                The label of the plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        if self.true_pareto_surf is None:
+            raise AttributeError("true_pareto_surf is not provided at the instantiation")
+
+        self.plot_surface(ax, surf=self.true_pareto_surf, color=color, label=label, transform=False, **kwargs)
+
     def plot_multiple_surface(
         self,
         ax: plt.Axes,

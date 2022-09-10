@@ -18,6 +18,31 @@ def func(X: np.ndarray) -> np.ndarray:
     return np.stack([f1, f2], axis=-1)
 
 
+def test_pareto_plot() -> None:
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+    with pytest.raises(AttributeError):
+        _, ax = plt.subplots()
+        eaf_plot.plot_true_pareto_surface(ax, color="red", label="dummy")
+
+    pareto_sols = np.random.random((30, 2))
+    pareto_sols[:, 0] = pareto_sols[np.argsort(pareto_sols[:, 0]), 0]
+    pareto_sols[:, 1] = pareto_sols[np.argsort(pareto_sols[:, 1]), 1]
+    eaf_plot = EmpiricalAttainmentFuncPlot(true_pareto_sols=pareto_sols)
+
+    _, ax = plt.subplots()
+    x_min, x_max = eaf_plot.x_min, eaf_plot.x_max
+    y_min, y_max = eaf_plot.y_min, eaf_plot.y_max
+    assert np.isfinite(x_min) and np.isfinite(x_max)
+    assert np.isfinite(y_min) and np.isfinite(y_max)
+    assert x_min < pareto_sols[:, 0].min() and x_max > pareto_sols[:, 0].max()
+    assert y_min < pareto_sols[:, 0].min() and y_max > pareto_sols[:, 0].max()
+
+    eaf_plot.plot_true_pareto_surface(ax, color="red", label="dummy")
+    assert x_min == eaf_plot.x_min and x_max == eaf_plot.x_max
+    assert y_min == eaf_plot.y_min and y_max == eaf_plot.y_max
+    plt.close()
+
+
 def test_plot() -> None:
     dim, n_samples, n_trials = 2, 200, 50
     X = np.random.random((n_trials, n_samples, dim)) * 10 - 5
