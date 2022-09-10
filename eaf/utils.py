@@ -3,38 +3,36 @@ from typing import List, Optional, Tuple
 import numpy as np
 
 
+LOGEPS = 1e-300
+
+
 def _transform_attainment_surface(
     emp_att_surfs: np.ndarray,
     log_scale: Optional[List[int]],
 ) -> Tuple[np.ndarray, float, float, float, float]:
     X = emp_att_surfs[..., 0].flatten()
     Y = emp_att_surfs[..., 1].flatten()
-    X = X[np.isfinite(X)]
-    Y = Y[np.isfinite(Y)]
-    (x_min, x_max) = X.min(), X.max()
-    (y_min, y_max) = Y.min(), Y.max()
-
     log_scale = log_scale if log_scale is not None else []
-    if 0 in log_scale:
-        x_min, x_max = np.log(x_min), np.log(x_max)
-        x_min -= 0.1 * (x_max - x_min)
-        x_max += 0.1 * (x_max - x_min)
-        x_min, x_max = np.exp(x_min), np.exp(x_max)
-    else:
-        x_min -= 0.1 * (x_max - x_min)
-        x_max += 0.1 * (x_max - x_min)
-    if 1 in log_scale:
-        y_min, y_max = np.log(y_min), np.log(y_max)
-        y_min -= 0.1 * (y_max - y_min)
-        y_max += 0.1 * (y_max - y_min)
-        y_min, y_max = np.exp(y_min), np.exp(y_max)
-    else:
-        y_min -= 0.1 * (y_max - y_min)
-        y_max += 0.1 * (y_max - y_min)
+    x_is_log, y_is_log = 0 in log_scale, 1 in log_scale
 
-    emp_att_surfs[..., 0][emp_att_surfs[..., 0] == -np.inf] = x_min
+    X = X[np.isfinite(X) & (X > LOGEPS) if x_is_log else np.isfinite(X)]
+    Y = Y[np.isfinite(Y) & (Y > LOGEPS) if y_is_log else np.isfinite(Y)]
+    (x_min, x_max) = (np.log(X.min()), np.log(X.max())) if x_is_log else (X.min(), X.max())
+    (y_min, y_max) = (np.log(Y.min()), np.log(Y.max())) if y_is_log else (Y.min(), Y.max())
+
+    x_min -= 0.1 * (x_max - x_min)
+    x_max += 0.1 * (x_max - x_min)
+    y_min -= 0.1 * (y_max - y_min)
+    y_max += 0.1 * (y_max - y_min)
+    (x_min, x_max) = (np.exp(x_min), np.exp(x_max)) if x_is_log else (x_min, x_max)
+    (y_min, y_max) = (np.exp(y_min), np.exp(y_max)) if y_is_log else (y_min, y_max)
+
+    lb = LOGEPS if x_is_log else -np.inf
+    emp_att_surfs[..., 0][emp_att_surfs[..., 0] == lb] = x_min
     emp_att_surfs[..., 0][emp_att_surfs[..., 0] == np.inf] = x_max
-    emp_att_surfs[..., 1][emp_att_surfs[..., 1] == -np.inf] = y_min
+
+    lb = LOGEPS if y_is_log else -np.inf
+    emp_att_surfs[..., 1][emp_att_surfs[..., 1] == LOGEPS] = y_min
     emp_att_surfs[..., 1][emp_att_surfs[..., 1] == np.inf] = y_max
 
     return emp_att_surfs, x_min, x_max, y_min, y_max
