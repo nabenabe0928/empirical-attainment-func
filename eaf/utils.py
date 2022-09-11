@@ -104,8 +104,10 @@ def pareto_front_to_surface(
 
     modified_pf = np.empty((n_sols + 2, n_obj))
     modified_pf[1:-1] = pareto_front
-    modified_pf[0] = [x_min, y_min] if (maximize_x ^ maximize_y) else [x_min, y_max]
-    modified_pf[-1] = [x_max, y_max] if (maximize_x ^ maximize_y) else [x_max, y_min]
+    x_border = pareto_front[:, 0].max() if maximize_x else pareto_front[:, 0].min()
+    modified_pf[0] = [x_border, y_min] if maximize_y else [x_border, y_max]
+    y_border = pareto_front[:, 1].max() if maximize_y else pareto_front[:, 1].min()
+    modified_pf[-1] = [x_min, y_border] if maximize_x else [x_max, y_border]
 
     if len(larger_is_better_objectives) > 0:
         modified_pf = _change_directions(modified_pf, larger_is_better_objectives=larger_is_better_objectives)

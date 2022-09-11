@@ -44,16 +44,16 @@ def test_values_in_pareto_front_to_surface() -> None:
     costs = get_dummy_dataset()
     pareto_front = costs[is_pareto_front(costs)]
     modified_pf = pareto_front_to_surface(pareto_front, x_min=0, x_max=100, y_min=0, y_max=100)
-    assert modified_pf[0, 0] == 0
+    assert modified_pf[0, 0] == pareto_front[:, 0].min()
     assert modified_pf[0, 1] == 100
     assert modified_pf[-1, 0] == 100
-    assert modified_pf[-1, 1] == 0
+    assert modified_pf[-1, 1] == pareto_front[:, 1].min()
 
     modified_pf = pareto_front_to_surface(pareto_front, x_max=100, y_max=100, log_scale=[0])
-    assert modified_pf[0, 0] == LOGEPS
+    assert modified_pf[0, 0] == pareto_front[:, 0].min()
     assert modified_pf[0, 1] == 100
     assert modified_pf[-1, 0] == 100
-    assert modified_pf[-1, 1] == -np.inf
+    assert modified_pf[-1, 1] == pareto_front[:, 1].min()
 
 
 def test_pareto_front_to_surface() -> None:

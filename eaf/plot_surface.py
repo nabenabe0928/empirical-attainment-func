@@ -61,17 +61,10 @@ class EmpiricalAttainmentFuncPlot:
             self.x_min, self.x_max, self.y_min, self.y_max = _get_slighly_expanded_value_range(
                 true_pareto_sols, self.log_scale
             )
-            self.true_pareto_surf = pareto_front_to_surface(
-                true_pareto_sols,
-                x_min=self.x_min,
-                x_max=self.x_max,
-                y_min=self.y_min,
-                y_max=self.y_max,
-                **self._plot_kwargs,
-            )
+            self._true_pareto_sols = true_pareto_sols.copy()
         else:
             # We cannot plot until we call _transform_surface_list
-            self.true_pareto_surf = None
+            self._true_pareto_sols = None
             self.x_min = max(LOGEPS, x_min) if 0 in self.log_scale else x_min
             self.x_max = x_max
             self.y_min = max(LOGEPS, y_min) if 1 in self.log_scale else y_min
@@ -142,10 +135,18 @@ class EmpiricalAttainmentFuncPlot:
             kwargs:
                 The kwargs for scatter.
         """
-        if self.true_pareto_surf is None:
-            raise AttributeError("true_pareto_surf is not provided at the instantiation")
+        if self._true_pareto_sols is None:
+            raise AttributeError("true_pareto_sols is not provided at the instantiation")
 
-        self.plot_surface(ax, surf=self.true_pareto_surf, color=color, label=label, transform=False, **kwargs)
+        true_pareto_surf = pareto_front_to_surface(
+            self._true_pareto_sols.copy(),
+            x_min=self.x_min,
+            x_max=self.x_max,
+            y_min=self.y_min,
+            y_max=self.y_max,
+            **self._plot_kwargs,
+        )
+        self.plot_surface(ax, surf=true_pareto_surf, color=color, label=label, transform=False, **kwargs)
 
     def plot_multiple_surface(
         self,
