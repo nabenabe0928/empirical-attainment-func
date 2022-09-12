@@ -301,13 +301,22 @@ class EmpiricalAttainmentFuncPlot:
         if self._ref_point is None:
             raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
 
+        ref_point = self._ref_point.copy()
+        _costs_array = costs_array.copy()
+        if self.x_is_log:
+            _costs_array[..., 0] = np.log(_costs_array[..., 0])
+            ref_point[0] = np.log(ref_point[0])
+        if self.y_is_log:
+            _costs_array[..., 1] = np.log(_costs_array[..., 1])
+            ref_point[1] = np.log(ref_point[1])
+
         if len(self.larger_is_better_objectives) > 0:
-            costs_array = _change_directions(costs_array, self.larger_is_better_objectives)
+            _costs_array = _change_directions(_costs_array, self.larger_is_better_objectives)
 
         (n_runs, n_observations, _) = costs_array.shape
         hvs = np.zeros((n_runs, n_observations))
         for i in range(n_observations):
-            hvs[:, i] = _compute_hypervolume2d(costs_array=costs_array[:, : i + 1], ref_point=self._ref_point)
+            hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=self._ref_point)
 
         T = np.arange(n_observations) + 1
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)

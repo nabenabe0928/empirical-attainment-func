@@ -104,25 +104,26 @@ def test_plot_hypervolume() -> None:
     costs = func(X)
     _, ax = plt.subplots()
     ref_point = np.array([100, 100])
-    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point)
-    for log in [True, False]:
-        for axis_label in [True, False]:
-            eaf_plot.plot_hypervolume2d_with_band(
-                ax,
-                costs_array=costs,
-                color="red",
-                label="dummy",
-                log=log,
-                axis_label=axis_label,
-            )
-            eaf_plot.plot_multiple_hypervolume2d_with_band(
-                ax,
-                costs_array=np.stack([costs, costs]),
-                colors=["red"] * 2,
-                labels=["dummy"] * 2,
-                log=log,
-                axis_label=axis_label,
-            )
+    for log_scale in [None, [0, 1]]:
+        eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point, log_scale=log_scale)
+        for log in [True, False]:
+            for axis_label in [True, False]:
+                eaf_plot.plot_hypervolume2d_with_band(
+                    ax,
+                    costs_array=costs,
+                    color="red",
+                    label="dummy",
+                    log=log,
+                    axis_label=axis_label,
+                )
+                eaf_plot.plot_multiple_hypervolume2d_with_band(
+                    ax,
+                    costs_array=np.stack([costs, costs]),
+                    colors=["red"] * 2,
+                    labels=["dummy"] * 2,
+                    log=log,
+                    axis_label=axis_label,
+                )
 
     with pytest.raises(ValueError):
         # shape error
