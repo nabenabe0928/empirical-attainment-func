@@ -316,7 +316,7 @@ class EmpiricalAttainmentFuncPlot:
         (n_runs, n_observations, _) = costs_array.shape
         hvs = np.zeros((n_runs, n_observations))
         for i in range(n_observations):
-            hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=self._ref_point)
+            hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=ref_point)
 
         T = np.arange(n_observations) + 1
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
