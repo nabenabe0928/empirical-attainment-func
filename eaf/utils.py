@@ -10,8 +10,11 @@ import numpy as np
 LOGEPS = 1e-300
 
 
-def _compute_hypervolume2d(costs_array: np.ndarray, ref_point: np.ndarray) -> float:
+def _compute_hypervolume2d(costs_array: np.ndarray, ref_point: np.ndarray) -> np.ndarray:
     # costs must be better when they are smaller
+    if not np.all(costs_array[..., 0] <= ref_point[0]) or not np.all(costs_array[..., 1] <= ref_point[1]):
+        raise ValueError("all values in costs must be smaller than ref_point")
+
     # Sort by x in asc, then by y in desc
     (n_runs, _, _) = costs_array.shape
     orders = np.lexsort((-costs_array[..., 1], costs_array[..., 0]), axis=-1)

@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from eaf.utils import (
     LOGEPS,
@@ -54,7 +54,7 @@ class EmpiricalAttainmentFuncPlot:
         self.larger_is_better_objectives = (
             larger_is_better_objectives if larger_is_better_objectives is not None else []
         )
-        self._ref_point = ref_point.copy() if ref_point is not None else None
+        self._ref_point = ref_point.copy().astype(np.float64) if ref_point is not None else None
         self.log_scale = log_scale if log_scale is not None else []
         self.x_is_log, self.y_is_log = 0 in self.log_scale, 1 in self.log_scale
         self._plot_kwargs = dict(
@@ -267,6 +267,22 @@ class EmpiricalAttainmentFuncPlot:
         ax.set_ylim(self.y_min, self.y_max)
         return lines
 
+    def _transform_ref_point_and_costs_array(self, costs_array: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        ref_point = self._ref_point.copy()
+        _costs_array = costs_array.copy()
+        if self.x_is_log:
+            _costs_array[..., 0] = np.log(_costs_array[..., 0])
+            ref_point[0] = np.log(ref_point[0])
+        if self.y_is_log:
+            _costs_array[..., 1] = np.log(_costs_array[..., 1])
+            ref_point[1] = np.log(ref_point[1])
+
+        if len(self.larger_is_better_objectives) > 0:
+            _costs_array = _change_directions(_costs_array, self.larger_is_better_objectives)
+            ref_point = _change_directions(ref_point[np.newaxis], self.larger_is_better_objectives)[0]
+
+        return ref_point, _costs_array
+
     def plot_hypervolume2d_with_band(
         self,
         ax: plt.Axes,
@@ -301,19 +317,8 @@ class EmpiricalAttainmentFuncPlot:
         if self._ref_point is None:
             raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
 
-        ref_point = self._ref_point.copy()
-        _costs_array = costs_array.copy()
-        if self.x_is_log:
-            _costs_array[..., 0] = np.log(_costs_array[..., 0])
-            ref_point[0] = np.log(ref_point[0])
-        if self.y_is_log:
-            _costs_array[..., 1] = np.log(_costs_array[..., 1])
-            ref_point[1] = np.log(ref_point[1])
-
-        if len(self.larger_is_better_objectives) > 0:
-            _costs_array = _change_directions(_costs_array, self.larger_is_better_objectives)
-
-        (n_runs, n_observations, _) = costs_array.shape
+        ref_point, _costs_array = self._transform_ref_point_and_costs_array(costs_array)
+        (n_runs, n_observations, _) = _costs_array.shape
         hvs = np.zeros((n_runs, n_observations))
         for i in range(n_observations):
             hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=ref_point)
@@ -329,6 +334,7 @@ class EmpiricalAttainmentFuncPlot:
             ax.set_xlabel("Number of config evaluations")
             ax.set_ylabel("Hypervolume")
 
+        ax.set_xlim((1, n_observations))
         return line
 
     def plot_multiple_hypervolume2d_with_band(
@@ -365,6 +371,7 @@ class EmpiricalAttainmentFuncPlot:
             )
 
         lines: List[Any] = []
+        n_observations = costs_array.shape[-2]
         for _costs_array, color, label in zip(costs_array, colors, labels):
             line = self.plot_hypervolume2d_with_band(
                 ax, _costs_array, color, label, log=False, axis_label=False, **kwargs
@@ -377,4 +384,40 @@ class EmpiricalAttainmentFuncPlot:
             ax.set_xlabel("Number of config evaluations")
             ax.set_ylabel("Hypervolume")
 
+        ax.set_xlim((1, n_observations))
         return lines
+
+    def plot_true_pareto_surface_hypervolume2d(
+        self,
+        ax: plt.Axes,
+        n_observations: int,
+        color: str,
+        label: str,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Plot multiple surfaces.
+
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            n_observations (int):
+                How many samples happened in each experiment.
+                We need this value to set xlim.
+            color (str):
+                The color of the plot
+            label (str):
+                The label of the plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        if self._true_pareto_sols is None:
+            raise AttributeError("true_pareto_sols is not provided at the instantiation")
+
+        if self._ref_point is None:
+            raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
+
+        ref_point, true_pf = self._transform_ref_point_and_costs_array(self._true_pareto_sols)
+        hv = _compute_hypervolume2d(true_pf[np.newaxis], ref_point)[0]
+        ax.hlines(y=hv, xmin=1, xmax=n_observations, colors=color, label=label, **kwargs)
+        ax.set_xlim((1, n_observations))

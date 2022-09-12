@@ -1,5 +1,7 @@
 import unittest
 
+from fast_pareto import is_pareto_front
+
 import matplotlib.pyplot as plt
 
 import pytest
@@ -133,6 +135,7 @@ def test_plot_hypervolume() -> None:
         # shape error
         eaf_plot.plot_multiple_hypervolume2d_with_band(ax, costs_array=costs, colors=["red"] * 2, labels=["dummy"] * 2)
 
+    ref_point[0] = 1e-12
     eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point, larger_is_better_objectives=[0])
     eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy")
 
@@ -142,6 +145,26 @@ def test_plot_hypervolume() -> None:
         eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy")
 
     plt.close()
+
+
+def test_plot_pareto_hypervolume() -> None:
+    costs = func(np.random.random((100, 2)) * 10 - 5)
+    pf = costs[is_pareto_front(costs)]
+
+    _, ax = plt.subplots()
+    eaf_plot = EmpiricalAttainmentFuncPlot(true_pareto_sols=pf, ref_point=np.array([98.0, 98.0]))
+    eaf_plot.plot_true_pareto_surface_hypervolume2d(ax, 100, color="red", label="test", linestyle="--")
+    plt.close()
+
+    with pytest.raises(AttributeError):
+        # without pareto front
+        eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=np.array([98.0, 98.0]))
+        eaf_plot.plot_true_pareto_surface_hypervolume2d(ax, 100, color="red", label="test", linestyle="--")
+
+    with pytest.raises(AttributeError):
+        # without ref point
+        eaf_plot = EmpiricalAttainmentFuncPlot(true_pareto_sols=pf)
+        eaf_plot.plot_true_pareto_surface_hypervolume2d(ax, 100, color="red", label="test", linestyle="--")
 
 
 if __name__ == "__main__":

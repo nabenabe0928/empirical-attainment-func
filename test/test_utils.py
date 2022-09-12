@@ -39,6 +39,9 @@ def test_compute_hypervolume2d() -> None:
             h = ref_point[1] - np.minimum.accumulate(sorted_costs[:, 1])
             assert np.allclose(sol[i], w @ h)
 
+    with pytest.raises(ValueError):
+        _compute_hypervolume2d(costs_array, ref_point=np.array([0.5, 0.5]))
+
 
 def test_raise_errors_in_pareto_front_to_surface() -> None:
     with pytest.raises(ValueError):
