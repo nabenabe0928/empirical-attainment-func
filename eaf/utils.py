@@ -10,6 +10,20 @@ import numpy as np
 LOGEPS = 1e-300
 
 
+def _compute_hypervolume2d(costs_array: np.ndarray, ref_point: np.ndarray) -> float:
+    # costs must be better when they are smaller
+    # Sort by x in asc, then by y in desc
+    (n_runs, _, _) = costs_array.shape
+    orders = np.lexsort((-costs_array[..., 1], costs_array[..., 0]), axis=-1)
+
+    sorted_costs_array = np.stack([costs[order] for i, (costs, order) in enumerate(zip(costs_array, orders))])
+    assert sorted_costs_array.shape == costs_array.shape
+
+    w = np.hstack([sorted_costs_array[:, 1:, 0], np.full((n_runs, 1), ref_point[0])]) - sorted_costs_array[..., 0]
+    h = ref_point[1] - np.minimum.accumulate(sorted_costs_array[..., 1], axis=-1)
+    return np.sum(w * h, axis=-1)
+
+
 def _change_scale(ax: plt.Axes, log_scale: Optional[List[int]]) -> None:
     log_scale = [] if log_scale is None else log_scale
     if 0 in log_scale:

@@ -98,5 +98,50 @@ def test_plot_with_band() -> None:
     plt.close()
 
 
+def test_plot_hypervolume() -> None:
+    dim, n_samples, n_independent_runs = 2, 100, 50
+    X = np.random.random((n_independent_runs, n_samples, dim)) * 10 - 5
+    costs = func(X)
+    _, ax = plt.subplots()
+    ref_point = np.array([100, 100])
+    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point)
+    for log in [True, False]:
+        for axis_label in [True, False]:
+            eaf_plot.plot_hypervolume2d_with_band(
+                ax,
+                costs_array=costs,
+                color="red",
+                label="dummy",
+                log=log,
+                axis_label=axis_label,
+            )
+            eaf_plot.plot_multiple_hypervolume2d_with_band(
+                ax,
+                costs_array=np.stack([costs, costs]),
+                colors=["red"] * 2,
+                labels=["dummy"] * 2,
+                log=log,
+                axis_label=axis_label,
+            )
+
+    with pytest.raises(ValueError):
+        # shape error
+        eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs[0], color="red", label="dummy")
+
+    with pytest.raises(ValueError):
+        # shape error
+        eaf_plot.plot_multiple_hypervolume2d_with_band(ax, costs_array=costs, colors=["red"] * 2, labels=["dummy"] * 2)
+
+    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point, larger_is_better_objectives=[0])
+    eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy")
+
+    eaf_plot = EmpiricalAttainmentFuncPlot()
+    with pytest.raises(AttributeError):
+        # no ref point
+        eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy")
+
+    plt.close()
+
+
 if __name__ == "__main__":
     unittest.main()

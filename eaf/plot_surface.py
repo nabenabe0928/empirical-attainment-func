@@ -4,10 +4,13 @@ from eaf.utils import (
     LOGEPS,
     _change_scale,
     _check_surface,
+    _compute_hypervolume2d,
     _get_slighly_expanded_value_range,
     _step_direction,
     pareto_front_to_surface,
 )
+
+from fast_pareto.pareto import _change_directions
 
 import matplotlib.pyplot as plt
 
@@ -45,11 +48,13 @@ class EmpiricalAttainmentFuncPlot:
         x_max: float = -np.inf,
         y_min: float = np.inf,
         y_max: float = -np.inf,
+        ref_point: np.ndarray = None,
     ):
         self.step_dir = _step_direction(larger_is_better_objectives)
         self.larger_is_better_objectives = (
             larger_is_better_objectives if larger_is_better_objectives is not None else []
         )
+        self._ref_point = ref_point.copy() if ref_point is not None else None
         self.log_scale = log_scale if log_scale is not None else []
         self.x_is_log, self.y_is_log = 0 in self.log_scale, 1 in self.log_scale
         self._plot_kwargs = dict(
@@ -204,7 +209,7 @@ class EmpiricalAttainmentFuncPlot:
                 The vertices of the empirical attainment surfaces for each level.
                 If surf[i, j, 1] takes np.inf, this is not actually on the surface.
                 The shape is (3, X.size, 2).
-            colors (str):
+            color (str):
                 The color of the plot
             label (str):
                 The label of the plot.
@@ -260,4 +265,107 @@ class EmpiricalAttainmentFuncPlot:
 
         ax.set_xlim(self.x_min, self.x_max)
         ax.set_ylim(self.y_min, self.y_max)
+        return lines
+
+    def plot_hypervolume2d_with_band(
+        self,
+        ax: plt.Axes,
+        costs_array: np.ndarray,
+        color: str,
+        label: str,
+        log: bool = False,
+        axis_label: bool = True,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Plot the hypervolume with a standard error band.
+
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            costs_array (np.ndarray):
+                The costs obtained in the observations.
+                The shape must be (n_independent_runs, n_samples, n_obj).
+                For now, we only support n_obj == 2.
+            colors (str):
+                The color of the plot
+            label (str):
+                The label of the plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        if len(costs_array.shape) != 3 or costs_array.shape[-1] != 2:
+            raise ValueError(
+                f"The shape of costs_array must be (n_independent_runs, n_points, 2), but got {costs_array.shape}"
+            )
+        if self._ref_point is None:
+            raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
+
+        if len(self.larger_is_better_objectives) > 0:
+            costs_array = _change_directions(costs_array, self.larger_is_better_objectives)
+
+        (n_runs, n_observations, _) = costs_array.shape
+        hvs = np.zeros((n_runs, n_observations))
+        for i in range(n_observations):
+            hvs[:, i] = _compute_hypervolume2d(costs_array=costs_array[:, : i + 1], ref_point=self._ref_point)
+
+        T = np.arange(n_observations) + 1
+        m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
+        line = ax.plot(T, m, color=color, label=label, **kwargs)
+        ax.fill_between(T, m - s, m + s, color=color, alpha=0.2, **kwargs)
+
+        if log:
+            ax.set_yscale("log")
+        if axis_label:
+            ax.set_xlabel("Number of config evaluations")
+            ax.set_ylabel("Hypervolume")
+
+        return line
+
+    def plot_multiple_hypervolume2d_with_band(
+        self,
+        ax: plt.Axes,
+        costs_array: np.ndarray,
+        colors: List[str],
+        labels: List[str],
+        log: bool = False,
+        axis_label: bool = True,
+        **kwargs: Any,
+    ) -> List[Any]:
+        """
+        Plot multiple hypervolume curves.
+
+        Args:
+            ax (plt.Axes):
+                The subplots axes.
+            costs_array (np.ndarray):
+                The costs obtained in the observations.
+                The shape must be (n_curves, n_independent_runs, n_samples, n_obj).
+                For now, we only support n_obj == 2.
+            colors (List[str]):
+                The colors of each plot
+            labels (List[str]):
+                The labels of each plot.
+            kwargs:
+                The kwargs for scatter.
+        """
+        if len(costs_array.shape) != 4 or costs_array.shape[-1] != 2:
+            raise ValueError(
+                "The shape of costs_array must be (n_curves, n_independent_runs, n_points, 2),"
+                f" but got {costs_array.shape}"
+            )
+
+        lines: List[Any] = []
+        for _costs_array, color, label in zip(costs_array, colors, labels):
+            line = self.plot_hypervolume2d_with_band(
+                ax, _costs_array, color, label, log=False, axis_label=False, **kwargs
+            )
+            lines.append(line)
+
+        if log:
+            ax.set_yscale("log")
+        if axis_label:
+            ax.set_xlabel("Number of config evaluations")
+            ax.set_ylabel("Hypervolume")
+
         return lines

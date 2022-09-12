@@ -9,7 +9,7 @@ import pytest
 import numpy as np
 
 from eaf import pareto_front_to_surface, EmpiricalAttainmentFuncPlot
-from eaf.utils import LOGEPS, _check_surface, _step_direction
+from eaf.utils import LOGEPS, _check_surface, _compute_hypervolume2d, _step_direction
 
 
 def func(X: np.ndarray) -> np.ndarray:
@@ -23,6 +23,21 @@ def get_dummy_dataset() -> np.ndarray:
     X = np.random.random((n_samples, dim)) * 10 - 5
     costs = func(X)
     return costs
+
+
+def test_compute_hypervolume2d() -> None:
+    for _ in range(20):
+        costs_array = np.random.random((20, 10, 2))
+        ref_point = np.ones(2)
+        sol = _compute_hypervolume2d(costs_array=costs_array, ref_point=ref_point)
+
+        for i, costs in enumerate(costs_array):
+            costs = costs[is_pareto_front(costs)]
+            order = np.lexsort((-costs[:, 1], costs[:, 0]))
+            sorted_costs = costs[order]
+            w = np.hstack([sorted_costs[1:, 0], ref_point[0]]) - sorted_costs[:, 0]
+            h = ref_point[1] - np.minimum.accumulate(sorted_costs[:, 1])
+            assert np.allclose(sol[i], w @ h)
 
 
 def test_raise_errors_in_pareto_front_to_surface() -> None:
