@@ -122,7 +122,7 @@ class EmpiricalAttainmentFuncPlot:
         kwargs.update(drawstyle=f"steps-{self.step_dir}")
         _check_surface(surf)
         X, Y = surf[:, 0], surf[:, 1]
-        line = ax.plot(X, Y, color=color, label=label, **kwargs)
+        line = ax.plot(X, Y, color=color, label=label, **kwargs)[0]
         _change_scale(ax, self.log_scale)
         return line
 
@@ -227,7 +227,7 @@ class EmpiricalAttainmentFuncPlot:
             _check_surface(surf)
 
         X = surfs[0, :, 0]
-        line = ax.plot(X, surfs[1, :, 1], color=color, label=label, drawstyle=f"steps-{self.step_dir}", **kwargs)
+        line = ax.plot(X, surfs[1, :, 1], color=color, label=label, drawstyle=f"steps-{self.step_dir}", **kwargs)[0]
         ax.fill_between(X, surfs[0, :, 1], surfs[2, :, 1], color=color, alpha=0.2, step=self.step_dir, **kwargs)
         _change_scale(ax, self.log_scale)
         return line
@@ -325,7 +325,7 @@ class EmpiricalAttainmentFuncPlot:
 
         T = np.arange(n_observations) + 1
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
-        line = ax.plot(T, m, color=color, label=label, **kwargs)
+        line = ax.plot(T, m, color=color, label=label, **kwargs)[0]
         ax.fill_between(T, m - s, m + s, color=color, alpha=0.2, **kwargs)
 
         if log:
