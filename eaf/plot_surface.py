@@ -126,7 +126,7 @@ class EmpiricalAttainmentFuncPlot:
         _change_scale(ax, self.log_scale)
         return line
 
-    def plot_true_pareto_surface(self, ax: plt.Axes, color: str, label: str, **kwargs: Any) -> None:
+    def plot_true_pareto_surface(self, ax: plt.Axes, color: str, label: str, **kwargs: Any) -> Any:
         """
         Plot multiple surfaces.
 
@@ -151,7 +151,7 @@ class EmpiricalAttainmentFuncPlot:
             y_max=self.y_max,
             **self._plot_kwargs,
         )
-        self.plot_surface(ax, surf=true_pareto_surf, color=color, label=label, transform=False, **kwargs)
+        return self.plot_surface(ax, surf=true_pareto_surf, color=color, label=label, transform=False, **kwargs)
 
     def plot_multiple_surface(
         self,
@@ -394,7 +394,7 @@ class EmpiricalAttainmentFuncPlot:
         color: str,
         label: str,
         **kwargs: Any,
-    ) -> None:
+    ) -> Any:
         """
         Plot multiple surfaces.
 
@@ -419,5 +419,6 @@ class EmpiricalAttainmentFuncPlot:
 
         ref_point, true_pf = self._transform_ref_point_and_costs_array(self._true_pareto_sols)
         hv = _compute_hypervolume2d(true_pf[np.newaxis], ref_point)[0]
-        ax.hlines(y=hv, xmin=1, xmax=n_observations, colors=color, label=label, **kwargs)
+        line = ax.hlines(y=hv, xmin=1, xmax=n_observations, colors=color, label=label, **kwargs)
         ax.set_xlim((1, n_observations))
+        return line
