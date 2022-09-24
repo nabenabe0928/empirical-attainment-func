@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from eaf.utils import (
     LOGEPS,
@@ -17,15 +17,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def _extract_markersize(**kwargs: Any) -> Tuple[Optional[str], Any]:
-    if "markersize" in kwargs or "ms" in kwargs:
-        key = "markersize" if "markersize" in kwargs else "ms"
-        markersize = kwargs[key]
-        kwargs.pop(key)
-    else:
-        markersize = None
+def _extract_marker_kwargs(**kwargs: Any) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    marker_kwargs: Dict[str, Any] = dict()
+    new_kwargs: Dict[str, Any] = dict()
+    for k, v in kwargs.items():
+        if k.startswith("mark"):
+            marker_kwargs[k] = v
+        else:
+            new_kwargs[k] = v
 
-    return markersize, kwargs
+    return marker_kwargs, new_kwargs
 
 
 class EmpiricalAttainmentFuncPlot:
@@ -223,7 +224,7 @@ class EmpiricalAttainmentFuncPlot:
         linestyles = linestyles if linestyles is not None else [None] * n_surfs
         markers = markers if markers is not None else [None] * n_surfs
         for surf, color, label, linestyle, marker in zip(surfs, colors, labels, linestyles, markers):
-            kwargs.update(dict(color=color, label=label, linestyle=linestyle, marker=marker))
+            kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
             line = self.plot_surface(ax, surf, transform=False, **kwargs)
             lines.append(line)
 
@@ -273,12 +274,12 @@ class EmpiricalAttainmentFuncPlot:
 
         X = surfs[0, :, 0]
 
-        markersize, kwargs = _extract_markersize(**kwargs)
+        marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)
         kwargs.update(color=color)
         ax.fill_between(X, surfs[0, :, 1], surfs[2, :, 1], alpha=0.2, step=self.step_dir, **kwargs)
 
         # marker and linestyle are only for plot
-        kwargs.update(label=label, linestyle=linestyle, marker=marker, markersize=markersize)
+        kwargs.update(label=label, linestyle=linestyle, marker=marker, **marker_kwargs)
         line = ax.plot(X, surfs[1, :, 1], drawstyle=f"steps-{self.step_dir}", **kwargs)[0]
         _change_scale(ax, self.log_scale)
         return line
@@ -386,12 +387,12 @@ class EmpiricalAttainmentFuncPlot:
         T = np.arange(n_observations) + 1
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
 
-        markersize, kwargs = _extract_markersize(**kwargs)
+        marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)
         kwargs.update(color=color)
         ax.fill_between(T, m - s, m + s, alpha=0.2, **kwargs)
 
         # marker and linestyle are only for plot
-        kwargs.update(label=label, linestyle=linestyle, marker=marker, markersize=markersize)
+        kwargs.update(label=label, linestyle=linestyle, marker=marker, **marker_kwargs)
         line = ax.plot(T, m, **kwargs)[0]
 
         if log:
@@ -490,7 +491,7 @@ class EmpiricalAttainmentFuncPlot:
 
         ref_point, true_pf = self._transform_ref_point_and_costs_array(self._true_pareto_sols)
         hv = _compute_hypervolume2d(true_pf[np.newaxis], ref_point)[0]
-        kwargs.update(dict(colors=color, label=label, linestyle=linestyle))
+        kwargs.update(colors=color, label=label, linestyle=linestyle)
         line = ax.hlines(y=hv, xmin=1, xmax=n_observations, **kwargs)
         ax.set_xlim((1, n_observations))
         return line
