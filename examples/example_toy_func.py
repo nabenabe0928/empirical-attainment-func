@@ -28,10 +28,16 @@ def plot_multiple(ax: plt.Axes) -> None:
     levels = [1, n_independent_runs // 2, n_independent_runs]
     labels = ["best", "median", "worst"]
     colors = ["red", "blue", "green"]
+    markers = ["v", "^", "o"]
     surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
     eaf_plot = EmpiricalAttainmentFuncPlot()
 
-    eaf_plot.plot_multiple_surface(ax, surfs=surfs, colors=colors, labels=labels)
+    kwargs = dict(
+        labels=labels,
+        colors=colors,
+        markers=markers,
+    )
+    eaf_plot.plot_multiple_surface(ax, surfs=surfs, **kwargs)
     ax.grid()
     ax.legend()
 

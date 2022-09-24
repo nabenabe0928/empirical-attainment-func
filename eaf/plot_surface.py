@@ -17,6 +17,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+def _extract_markersize(**kwargs: Any) -> Tuple[Optional[str], Any]:
+    if "markersize" in kwargs or "ms" in kwargs:
+        key = "markersize" if "markersize" in kwargs else "ms"
+        markersize = kwargs[key]
+        kwargs.pop(key)
+    else:
+        markersize = None
+
+    return markersize, kwargs
+
+
 class EmpiricalAttainmentFuncPlot:
     """
     The class to plot empirical attainment function.
@@ -93,7 +104,15 @@ class EmpiricalAttainmentFuncPlot:
         return surfs_list
 
     def plot_surface(
-        self, ax: plt.Axes, surf: np.ndarray, color: str, label: str, transform: bool = True, **kwargs: Any
+        self,
+        ax: plt.Axes,
+        surf: np.ndarray,
+        color: str,
+        label: str,
+        linestyle: Optional[str] = None,
+        marker: Optional[str] = None,
+        transform: bool = True,
+        **kwargs: Any,
     ) -> Any:
         """
         Plot multiple surfaces.
@@ -122,11 +141,19 @@ class EmpiricalAttainmentFuncPlot:
         kwargs.update(drawstyle=f"steps-{self.step_dir}")
         _check_surface(surf)
         X, Y = surf[:, 0], surf[:, 1]
-        line = ax.plot(X, Y, color=color, label=label, **kwargs)[0]
+        line = ax.plot(X, Y, color=color, label=label, linestyle=linestyle, marker=marker, **kwargs)[0]
         _change_scale(ax, self.log_scale)
         return line
 
-    def plot_true_pareto_surface(self, ax: plt.Axes, color: str, label: str, **kwargs: Any) -> Any:
+    def plot_true_pareto_surface(
+        self,
+        ax: plt.Axes,
+        color: str,
+        label: str,
+        linestyle: Optional[str] = None,
+        marker: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Any:
         """
         Plot multiple surfaces.
 
@@ -151,7 +178,16 @@ class EmpiricalAttainmentFuncPlot:
             y_max=self.y_max,
             **self._plot_kwargs,
         )
-        return self.plot_surface(ax, surf=true_pareto_surf, color=color, label=label, transform=False, **kwargs)
+        return self.plot_surface(
+            ax,
+            surf=true_pareto_surf,
+            color=color,
+            label=label,
+            linestyle=linestyle,
+            marker=marker,
+            transform=False,
+            **kwargs,
+        )
 
     def plot_multiple_surface(
         self,
@@ -159,6 +195,8 @@ class EmpiricalAttainmentFuncPlot:
         surfs: Union[np.ndarray, List[np.ndarray]],
         colors: List[str],
         labels: List[str],
+        linestyles: Optional[List[Optional[str]]] = None,
+        markers: Optional[List[Optional[str]]] = None,
         **kwargs: Any,
     ) -> List[Any]:
         """
@@ -180,8 +218,13 @@ class EmpiricalAttainmentFuncPlot:
         """
         lines: List[Any] = []
         surfs = self._transform_surface_list(surfs)
-        for surf, color, label in zip(surfs, colors, labels):
-            line = self.plot_surface(ax, surf, color, label, transform=False, **kwargs)
+
+        n_surfs = len(surfs)
+        linestyles = linestyles if linestyles is not None else [None] * n_surfs
+        markers = markers if markers is not None else [None] * n_surfs
+        for surf, color, label, linestyle, marker in zip(surfs, colors, labels, linestyles, markers):
+            kwargs.update(dict(color=color, label=label, linestyle=linestyle, marker=marker))
+            line = self.plot_surface(ax, surf, transform=False, **kwargs)
             lines.append(line)
 
         ax.set_xlim(self.x_min, self.x_max)
@@ -194,6 +237,8 @@ class EmpiricalAttainmentFuncPlot:
         surfs: np.ndarray,
         color: str,
         label: str,
+        linestyle: Optional[str] = None,
+        marker: Optional[str] = None,
         transform: bool = True,
         **kwargs: Any,
     ) -> Any:
@@ -227,8 +272,14 @@ class EmpiricalAttainmentFuncPlot:
             _check_surface(surf)
 
         X = surfs[0, :, 0]
-        line = ax.plot(X, surfs[1, :, 1], color=color, label=label, drawstyle=f"steps-{self.step_dir}", **kwargs)[0]
-        ax.fill_between(X, surfs[0, :, 1], surfs[2, :, 1], color=color, alpha=0.2, step=self.step_dir, **kwargs)
+
+        markersize, kwargs = _extract_markersize(**kwargs)
+        kwargs.update(color=color)
+        ax.fill_between(X, surfs[0, :, 1], surfs[2, :, 1], alpha=0.2, step=self.step_dir, **kwargs)
+
+        # marker and linestyle are only for plot
+        kwargs.update(label=label, linestyle=linestyle, marker=marker, markersize=markersize)
+        line = ax.plot(X, surfs[1, :, 1], drawstyle=f"steps-{self.step_dir}", **kwargs)[0]
         _change_scale(ax, self.log_scale)
         return line
 
@@ -238,6 +289,8 @@ class EmpiricalAttainmentFuncPlot:
         surfs_list: Union[np.ndarray, List[np.ndarray]],
         colors: List[str],
         labels: List[str],
+        linestyles: Optional[List[Optional[str]]] = None,
+        markers: Optional[List[Optional[str]]] = None,
         **kwargs: Any,
     ) -> List[Any]:
         """
@@ -259,8 +312,13 @@ class EmpiricalAttainmentFuncPlot:
         """
         lines: List[Any] = []
         surfs_list = self._transform_surface_list(surfs_list)
-        for surf, color, label in zip(surfs_list, colors, labels):
-            line = self.plot_surface_with_band(ax, surf, color, label, transform=False, **kwargs)
+
+        n_surfs = len(surfs_list)
+        linestyles = linestyles if linestyles is not None else [None] * n_surfs
+        markers = markers if markers is not None else [None] * n_surfs
+        for surf, color, label, linestyle, marker in zip(surfs_list, colors, labels, linestyles, markers):
+            kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
+            line = self.plot_surface_with_band(ax, surf, transform=False, **kwargs)
             lines.append(line)
 
         ax.set_xlim(self.x_min, self.x_max)
@@ -289,6 +347,8 @@ class EmpiricalAttainmentFuncPlot:
         costs_array: np.ndarray,
         color: str,
         label: str,
+        linestyle: Optional[str] = None,
+        marker: Optional[str] = None,
         log: bool = False,
         axis_label: bool = True,
         **kwargs: Any,
@@ -325,8 +385,14 @@ class EmpiricalAttainmentFuncPlot:
 
         T = np.arange(n_observations) + 1
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
-        line = ax.plot(T, m, color=color, label=label, **kwargs)[0]
-        ax.fill_between(T, m - s, m + s, color=color, alpha=0.2, **kwargs)
+
+        markersize, kwargs = _extract_markersize(**kwargs)
+        kwargs.update(color=color)
+        ax.fill_between(T, m - s, m + s, alpha=0.2, **kwargs)
+
+        # marker and linestyle are only for plot
+        kwargs.update(label=label, linestyle=linestyle, marker=marker, markersize=markersize)
+        line = ax.plot(T, m, **kwargs)[0]
 
         if log:
             ax.set_yscale("log")
@@ -343,6 +409,8 @@ class EmpiricalAttainmentFuncPlot:
         costs_array: np.ndarray,
         colors: List[str],
         labels: List[str],
+        linestyles: Optional[List[Optional[str]]] = None,
+        markers: Optional[List[Optional[str]]] = None,
         log: bool = False,
         axis_label: bool = True,
         **kwargs: Any,
@@ -372,10 +440,12 @@ class EmpiricalAttainmentFuncPlot:
 
         lines: List[Any] = []
         n_observations = costs_array.shape[-2]
-        for _costs_array, color, label in zip(costs_array, colors, labels):
-            line = self.plot_hypervolume2d_with_band(
-                ax, _costs_array, color, label, log=False, axis_label=False, **kwargs
-            )
+        n_lines = len(costs_array)
+        linestyles = linestyles if linestyles is not None else [None] * n_lines
+        markers = markers if markers is not None else [None] * n_lines
+        for _costs_array, color, label, linestyle, marker in zip(costs_array, colors, labels, linestyles, markers):
+            kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
+            line = self.plot_hypervolume2d_with_band(ax, _costs_array, log=False, axis_label=False, **kwargs)
             lines.append(line)
 
         if log:
@@ -393,6 +463,7 @@ class EmpiricalAttainmentFuncPlot:
         n_observations: int,
         color: str,
         label: str,
+        linestyle: Optional[str] = None,
         **kwargs: Any,
     ) -> Any:
         """
@@ -419,6 +490,7 @@ class EmpiricalAttainmentFuncPlot:
 
         ref_point, true_pf = self._transform_ref_point_and_costs_array(self._true_pareto_sols)
         hv = _compute_hypervolume2d(true_pf[np.newaxis], ref_point)[0]
-        line = ax.hlines(y=hv, xmin=1, xmax=n_observations, colors=color, label=label, **kwargs)
+        kwargs.update(dict(colors=color, label=label, linestyle=linestyle))
+        line = ax.hlines(y=hv, xmin=1, xmax=n_observations, **kwargs)
         ax.set_xlim((1, n_observations))
         return line

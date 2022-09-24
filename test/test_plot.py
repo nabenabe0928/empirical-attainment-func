@@ -53,11 +53,12 @@ def test_plot() -> None:
     labels = [f"the {feat} attainment" for feat in ["best", "median", "worst"]]
     levels = [1, n_trials // 2, n_trials]
     colors = ["red", "blue", "green"]
+    markers = ["v", "^", "o"]
     surfs_list = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
     eaf_plot = EmpiricalAttainmentFuncPlot()
-    eaf_plot.plot_multiple_surface(ax, colors=colors, labels=labels, surfs=surfs_list)
+    eaf_plot.plot_multiple_surface(ax, colors=colors, labels=labels, markers=markers, surfs=surfs_list)
     eaf_plot.plot_surface(ax, color=colors[0], label=labels[0], surf=surfs_list[0])
     # test log scale
     eaf_plot = EmpiricalAttainmentFuncPlot(log_scale=[0, 1])
@@ -81,9 +82,12 @@ def test_plot_with_band() -> None:
     surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
     _, ax = plt.subplots()
+    markers = ["v", "^"]
     eaf_plot = EmpiricalAttainmentFuncPlot()
     eaf_plot.plot_surface_with_band(ax, color="red", label="random", surfs=surfs)
-    eaf_plot.plot_multiple_surface_with_band(ax, colors=["red"] * 2, labels=["random"] * 2, surfs_list=[surfs] * 2)
+    eaf_plot.plot_multiple_surface_with_band(
+        ax, markers=markers, colors=["red"] * 2, labels=["random"] * 2, surfs_list=[surfs] * 2
+    )
     ax.legend()
     ax.grid()
     plt.close()
@@ -123,6 +127,7 @@ def test_plot_hypervolume() -> None:
                     costs_array=np.stack([costs, costs]),
                     colors=["red"] * 2,
                     labels=["dummy"] * 2,
+                    markers=["v", "^"],
                     log=log,
                     axis_label=axis_label,
                 )

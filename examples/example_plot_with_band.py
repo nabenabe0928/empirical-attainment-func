@@ -31,7 +31,14 @@ def plot_multiple(ax: plt.Axes) -> None:
 
     colors = ["red", "blue", "green"]
     labels = ["Exp. 1", "Exp. 2", "Exp. 3"]
-    eaf_plot.plot_multiple_surface_with_band(ax, surfs_list=surfs_list, colors=colors, labels=labels)
+    markers = ["v", "^", "o"]
+    kwargs = dict(
+        colors=colors,
+        labels=labels,
+        markers=markers,
+        markersize=3,
+    )
+    eaf_plot.plot_multiple_surface_with_band(ax, surfs_list=surfs_list, **kwargs)
     ax.legend()
     ax.grid()
 
