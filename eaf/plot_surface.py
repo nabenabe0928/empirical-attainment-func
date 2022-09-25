@@ -352,6 +352,7 @@ class EmpiricalAttainmentFuncPlot:
         marker: Optional[str] = None,
         log: bool = False,
         axis_label: bool = True,
+        normalize: bool = True,
         **kwargs: Any,
     ) -> Any:
         """
@@ -378,11 +379,15 @@ class EmpiricalAttainmentFuncPlot:
         if self._ref_point is None:
             raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
 
+        max_hv = self._compute_true_pareto_surface_hypervolume2d()
         ref_point, _costs_array = self._transform_ref_point_and_costs_array(costs_array)
         (n_runs, n_observations, _) = _costs_array.shape
         hvs = np.zeros((n_runs, n_observations))
         for i in range(n_observations):
             hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=ref_point)
+
+        if normalize:
+            hvs /= max_hv
 
         T = np.arange(n_observations) + 1
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
@@ -414,6 +419,7 @@ class EmpiricalAttainmentFuncPlot:
         markers: Optional[List[Optional[str]]] = None,
         log: bool = False,
         axis_label: bool = True,
+        normalize: bool = True,
         **kwargs: Any,
     ) -> List[Any]:
         """
@@ -445,7 +451,7 @@ class EmpiricalAttainmentFuncPlot:
         linestyles = linestyles if linestyles is not None else [None] * n_lines
         markers = markers if markers is not None else [None] * n_lines
         for _costs_array, color, label, linestyle, marker in zip(costs_array, colors, labels, linestyles, markers):
-            kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
+            kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker, normalize=normalize)
             line = self.plot_hypervolume2d_with_band(ax, _costs_array, log=False, axis_label=False, **kwargs)
             lines.append(line)
 
@@ -457,6 +463,17 @@ class EmpiricalAttainmentFuncPlot:
 
         ax.set_xlim((1, n_observations))
         return lines
+
+    def _compute_true_pareto_surface_hypervolume2d(self) -> float:
+        if self._true_pareto_sols is None:
+            raise AttributeError("true_pareto_sols is not provided at the instantiation")
+
+        if self._ref_point is None:
+            raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
+
+        ref_point, true_pf = self._transform_ref_point_and_costs_array(self._true_pareto_sols)
+        hv = _compute_hypervolume2d(true_pf[np.newaxis], ref_point)[0]
+        return hv
 
     def plot_true_pareto_surface_hypervolume2d(
         self,
@@ -483,14 +500,8 @@ class EmpiricalAttainmentFuncPlot:
             kwargs:
                 The kwargs for scatter.
         """
-        if self._true_pareto_sols is None:
-            raise AttributeError("true_pareto_sols is not provided at the instantiation")
 
-        if self._ref_point is None:
-            raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
-
-        ref_point, true_pf = self._transform_ref_point_and_costs_array(self._true_pareto_sols)
-        hv = _compute_hypervolume2d(true_pf[np.newaxis], ref_point)[0]
+        hv = self._compute_true_pareto_surface_hypervolume2d()
         kwargs.update(colors=color, label=label, linestyle=linestyle)
         line = ax.hlines(y=hv, xmin=1, xmax=n_observations, **kwargs)
         ax.set_xlim((1, n_observations))

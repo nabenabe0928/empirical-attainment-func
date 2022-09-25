@@ -7,6 +7,7 @@ from examples.toy_func import func
 
 
 REF_POINTS = np.array([50, 98])
+PARETO_SOLS = np.array([[0, 0]])  # this is not correct, but just defined it to be able to run
 
 
 def plot_single(ax: plt.Axes) -> None:
@@ -14,7 +15,7 @@ def plot_single(ax: plt.Axes) -> None:
     X = np.random.random((n_independent_runs, n_samples, dim)) * 10 - 5
     costs = func(X)
 
-    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=REF_POINTS)
+    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=REF_POINTS, true_pareto_sols=PARETO_SOLS)
 
     eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="test", marker="o")
     ax.grid()
@@ -29,7 +30,7 @@ def plot_multiple(ax: plt.Axes) -> None:
     labels = ["Exp. 1", "Exp. 2", "Exp. 3"]
     colors = ["red", "blue", "green"]
     markers = ["v", "^", "o"]
-    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=REF_POINTS)
+    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=REF_POINTS, true_pareto_sols=PARETO_SOLS)
 
     kwargs = dict(
         labels=labels,
