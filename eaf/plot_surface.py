@@ -482,6 +482,7 @@ class EmpiricalAttainmentFuncPlot:
         color: str,
         label: str,
         linestyle: Optional[str] = None,
+        normalize: bool = True,
         **kwargs: Any,
     ) -> Any:
         """
@@ -501,7 +502,11 @@ class EmpiricalAttainmentFuncPlot:
                 The kwargs for scatter.
         """
 
-        hv = self._compute_true_pareto_surface_hypervolume2d()
+        if normalize:
+            hv = 1
+        else:
+            hv = self._compute_true_pareto_surface_hypervolume2d()
+
         kwargs.update(colors=color, label=label, linestyle=linestyle)
         line = ax.hlines(y=hv, xmin=1, xmax=n_observations, **kwargs)
         ax.set_xlim((1, n_observations))
