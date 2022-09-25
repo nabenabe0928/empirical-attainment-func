@@ -459,7 +459,7 @@ class EmpiricalAttainmentFuncPlot:
             ax.set_yscale("log")
         if axis_label:
             ax.set_xlabel("Number of config evaluations")
-            ax.set_ylabel("Hypervolume")
+            ax.set_ylabel(("Normalized " if normalize else "") + "Hypervolume")
 
         ax.set_xlim((1, n_observations))
         return lines
