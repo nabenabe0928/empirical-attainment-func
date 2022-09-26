@@ -121,6 +121,7 @@ def test_plot_hypervolume() -> None:
                     label="dummy",
                     log=log,
                     axis_label=axis_label,
+                    normalize=False,
                 )
                 eaf_plot.plot_multiple_hypervolume2d_with_band(
                     ax,
@@ -130,25 +131,54 @@ def test_plot_hypervolume() -> None:
                     markers=["v", "^"],
                     log=log,
                     axis_label=axis_label,
+                    normalize=False,
                 )
 
     with pytest.raises(ValueError):
         # shape error
-        eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs[0], color="red", label="dummy")
+        eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs[0], color="red", label="dummy", normalize=False)
 
     with pytest.raises(ValueError):
         # shape error
-        eaf_plot.plot_multiple_hypervolume2d_with_band(ax, costs_array=costs, colors=["red"] * 2, labels=["dummy"] * 2)
+        eaf_plot.plot_multiple_hypervolume2d_with_band(
+            ax, costs_array=costs, colors=["red"] * 2, labels=["dummy"] * 2, normalize=False
+        )
 
     ref_point[0] = 1e-12
     eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point, larger_is_better_objectives=[0])
-    eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy")
+    eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy", normalize=False)
 
     eaf_plot = EmpiricalAttainmentFuncPlot()
     with pytest.raises(AttributeError):
         # no ref point
-        eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy")
+        eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy", normalize=False)
 
+    plt.close()
+
+
+def test_plot_normalized_hypervolume() -> None:
+    costs = func(np.random.random((1, 100, 2)) * 10 - 5)
+    pf = costs[:, is_pareto_front(costs[0])][0]
+
+    _, ax = plt.subplots()
+    eaf_plot = EmpiricalAttainmentFuncPlot(true_pareto_sols=pf, ref_point=np.array([98.0, 98.0]))
+    for log in [True, False]:
+        eaf_plot.plot_hypervolume2d_with_band(
+            ax,
+            costs_array=costs,
+            color="red",
+            label="dummy",
+            markersize=2,
+        )
+        eaf_plot.plot_multiple_hypervolume2d_with_band(
+            ax,
+            costs_array=np.stack([costs, costs]),
+            colors=["red"] * 2,
+            labels=["dummy"] * 2,
+            markers=["v", "^"],
+            log=log,
+            normalize=False,
+        )
     plt.close()
 
 
@@ -159,17 +189,39 @@ def test_plot_pareto_hypervolume() -> None:
     _, ax = plt.subplots()
     eaf_plot = EmpiricalAttainmentFuncPlot(true_pareto_sols=pf, ref_point=np.array([98.0, 98.0]))
     eaf_plot.plot_true_pareto_surface_hypervolume2d(ax, 100, color="red", label="test", linestyle="--")
-    plt.close()
 
+    # without the pareto front ==> it works if normalize = True
+    eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=np.array([98.0, 98.0]))
+    eaf_plot.plot_true_pareto_surface_hypervolume2d(
+        ax,
+        100,
+        color="red",
+        label="test",
+        linestyle="--",
+        normalize=True,
+    )
     with pytest.raises(AttributeError):
-        # without pareto front
+        # without the pareto front ==> it does not work if normalize = False
         eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=np.array([98.0, 98.0]))
-        eaf_plot.plot_true_pareto_surface_hypervolume2d(ax, 100, color="red", label="test", linestyle="--")
+        eaf_plot.plot_true_pareto_surface_hypervolume2d(
+            ax,
+            100,
+            color="red",
+            label="test",
+            linestyle="--",
+            normalize=False,
+        )
 
+    # without the ref point ==> it works if normalize = True
+    eaf_plot = EmpiricalAttainmentFuncPlot(true_pareto_sols=pf)
+    eaf_plot.plot_true_pareto_surface_hypervolume2d(ax, 100, color="red", label="test", linestyle="--")
     with pytest.raises(AttributeError):
-        # without ref point
+        # without the ref point ==> it does not work if normalize = False
         eaf_plot = EmpiricalAttainmentFuncPlot(true_pareto_sols=pf)
-        eaf_plot.plot_true_pareto_surface_hypervolume2d(ax, 100, color="red", label="test", linestyle="--")
+        eaf_plot.plot_true_pareto_surface_hypervolume2d(
+            ax, 100, color="red", label="test", linestyle="--", normalize=False
+        )
+    plt.close()
 
 
 if __name__ == "__main__":

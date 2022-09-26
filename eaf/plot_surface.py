@@ -379,7 +379,6 @@ class EmpiricalAttainmentFuncPlot:
         if self._ref_point is None:
             raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
 
-        max_hv = self._compute_true_pareto_surface_hypervolume2d()
         ref_point, _costs_array = self._transform_ref_point_and_costs_array(costs_array)
         (n_runs, n_observations, _) = _costs_array.shape
         hvs = np.zeros((n_runs, n_observations))
@@ -387,6 +386,7 @@ class EmpiricalAttainmentFuncPlot:
             hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=ref_point)
 
         if normalize:
+            max_hv = self._compute_true_pareto_surface_hypervolume2d()
             hvs /= max_hv
 
         T = np.arange(n_observations) + 1
@@ -503,7 +503,7 @@ class EmpiricalAttainmentFuncPlot:
         """
 
         if normalize:
-            hv = 1
+            hv = 1.0
         else:
             hv = self._compute_true_pareto_surface_hypervolume2d()
 
