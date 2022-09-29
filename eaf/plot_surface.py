@@ -276,7 +276,9 @@ class EmpiricalAttainmentFuncPlot:
 
         marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)
         kwargs.update(color=color)
+        alpha = kwargs.pop("alpha", None)
         ax.fill_between(X, surfs[0, :, 1], surfs[2, :, 1], alpha=0.2, step=self.step_dir, **kwargs)
+        kwargs["alpha"] = alpha
 
         # marker and linestyle are only for plot
         kwargs.update(label=label, linestyle=linestyle, marker=marker, **marker_kwargs)
@@ -394,7 +396,9 @@ class EmpiricalAttainmentFuncPlot:
 
         marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)
         kwargs.update(color=color)
+        alpha = kwargs.pop("alpha", None)
         ax.fill_between(T, m - s, m + s, alpha=0.2, **kwargs)
+        kwargs["alpha"] = alpha
 
         # marker and linestyle are only for plot
         kwargs.update(label=label, linestyle=linestyle, marker=marker, **marker_kwargs)
