@@ -50,6 +50,8 @@ class EmpiricalAttainmentFuncPlot:
         x_min, x_max, y_min, y_max (float):
             The lower/upper bounds for each objective if available.
             It is used to fix the value ranges of each objective in plots.
+        ref_point (Optional[np.ndarray]):
+            The reference point to be used for the visualization of hypervolume plots.
     """
 
     def __init__(
@@ -61,7 +63,7 @@ class EmpiricalAttainmentFuncPlot:
         x_max: float = -np.inf,
         y_min: float = np.inf,
         y_max: float = -np.inf,
-        ref_point: np.ndarray = None,
+        ref_point: Optional[np.ndarray] = None,
     ):
         self.step_dir = _step_direction(larger_is_better_objectives)
         self.larger_is_better_objectives = (
@@ -126,11 +128,17 @@ class EmpiricalAttainmentFuncPlot:
                 The vertices of the empirical attainment surface.
                 The shape must be (X.size, 2).
             color (str):
-                The color of the plot
+                The color of the plot.
             label (str):
                 The label of the plot.
+            linestyle (Optional[str]):
+                The linestyle of the plot.
+            marker (Optional[str]):
+                The marker of the plot.
+            transform (bool):
+                Whether automatically transforming based on (x_min, x_max) and (y_min, y_max).
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
         """
         if len(surf.shape) != 2 or surf.shape[1] != 2:
             raise ValueError(f"The shape of surf must be (n_points, 2), but got {surf.shape}")
@@ -158,17 +166,22 @@ class EmpiricalAttainmentFuncPlot:
         **kwargs: Any,
     ) -> Any:
         """
-        Plot multiple surfaces.
+        Plot the true pareto front surface.
+        The true pareto front must be provided when instantiating this class.
 
         Args:
             ax (plt.Axes):
                 The subplots axes.
             color (str):
-                The color of the plot
+                The color of the plot.
             label (str):
                 The label of the plot.
+            linestyle (Optional[str]):
+                The linestyle of the plot.
+            marker (Optional[str]):
+                The marker of the plot.
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
         """
         if self._true_pareto_sols is None:
             raise AttributeError("true_pareto_sols is not provided at the instantiation")
@@ -216,8 +229,12 @@ class EmpiricalAttainmentFuncPlot:
                 The colors of each plot
             labels (List[str]):
                 The labels of each plot.
+            linestyles (Optional[List[str]]):
+                The linestyles of each plot.
+            markers (Optional[List[str]]):
+                The markers of each plot.
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
         """
         lines: List[Any] = []
         _surfs = deepcopy(surfs)
@@ -262,8 +279,14 @@ class EmpiricalAttainmentFuncPlot:
                 The color of the plot
             label (str):
                 The label of the plot.
+            linestyle (Optional[str]):
+                The linestyle of the plot.
+            marker (Optional[str]):
+                The marker of the plot.
+            transform (bool):
+                Whether automatically transforming based on (x_min, x_max) and (y_min, y_max).
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
         """
         if surfs.shape[0] != 3:
             raise ValueError(f"plot_surface_with_band requires three levels, but got only {surfs.shape[0]} levels")
@@ -302,7 +325,7 @@ class EmpiricalAttainmentFuncPlot:
         **kwargs: Any,
     ) -> List[Any]:
         """
-        Plot multiple surfaces.
+        Plot multiple surfaces with a band.
 
         Args:
             ax (plt.Axes):
@@ -312,11 +335,15 @@ class EmpiricalAttainmentFuncPlot:
                 Each element should have the shape of (3, X.size, 2).
                 If this is an array, then the shape must be (n_surf, 3, X.size, 2).
             colors (List[str]):
-                The colors of each plot
+                The colors of each plot.
             labels (List[str]):
                 The labels of each plot.
+            linestyles (Optional[List[str]]):
+                The linestyles of each plot.
+            markers (Optional[List[str]]):
+                The markers of each plot.
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
         """
         lines: List[Any] = []
         _surfs_list = deepcopy(surfs_list)
@@ -373,12 +400,23 @@ class EmpiricalAttainmentFuncPlot:
                 The costs obtained in the observations.
                 The shape must be (n_independent_runs, n_samples, n_obj).
                 For now, we only support n_obj == 2.
-            colors (str):
-                The color of the plot
+            color (str):
+                The color of the plot.
             label (str):
                 The label of the plot.
+            linestyle (Optional[str]):
+                The linestyle of the plot.
+            marker (Optional[str]):
+                The marker of the plot.
+            log (bool):
+                Whether to use the log scale in the y-axis of the plot.
+            axis_label (bool):
+                Whether to add the default axis labels or not.
+            normalize (bool):
+                Whether to normalize the hypervolume or not.
+                If True, the y-axis is scaled into [0, 1].
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
         """
         if len(costs_array.shape) != 3 or costs_array.shape[-1] != 2:
             raise ValueError(
@@ -443,9 +481,20 @@ class EmpiricalAttainmentFuncPlot:
                 The shape must be (n_curves, n_independent_runs, n_samples, n_obj).
                 For now, we only support n_obj == 2.
             colors (List[str]):
-                The colors of each plot
+                The colors of each plot.
             labels (List[str]):
                 The labels of each plot.
+            linestyles (Optional[List[str]]):
+                The linestyles of each plot.
+            markers (Optional[List[str]]):
+                The markers of each plot.
+            log (bool):
+                Whether to use the log scale in the y-axis of the plot.
+            axis_label (bool):
+                Whether to add the default axis labels or not.
+            normalize (bool):
+                Whether to normalize the hypervolume or not.
+                If True, the y-axis is scaled into [0, 1].
             kwargs:
                 The kwargs for scatter.
         """
@@ -505,11 +554,15 @@ class EmpiricalAttainmentFuncPlot:
                 How many samples happened in each experiment.
                 We need this value to set xlim.
             color (str):
-                The color of the plot
+                The color of the plot.
             label (str):
                 The label of the plot.
+            linestyle (Optional[str]):
+                The linestyle of the plot.
+            marker (Optional[str]):
+                The marker of the plot.
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
         """
 
         if normalize:
