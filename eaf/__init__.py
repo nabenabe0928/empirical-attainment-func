@@ -3,8 +3,8 @@ from eaf.plot_surface import EmpiricalAttainmentFuncPlot
 from eaf.utils import pareto_front_to_surface
 
 
-__version__ = "0.3.7"
-__copyright__ = "Copyright (C) 2022 Shuhei Watanabe"
+__version__ = "0.4.0"
+__copyright__ = "Copyright (C) 2023 Shuhei Watanabe"
 __licence__ = "Apache-2.0 License"
 __author__ = "Shuhei Watanabe"
 __author_email__ = "shuhei.watanabe.utokyo@gmail.com"

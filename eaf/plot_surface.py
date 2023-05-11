@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from eaf.utils import (
@@ -134,14 +135,15 @@ class EmpiricalAttainmentFuncPlot:
         if len(surf.shape) != 2 or surf.shape[1] != 2:
             raise ValueError(f"The shape of surf must be (n_points, 2), but got {surf.shape}")
 
+        _surf = surf.copy()
         if transform:
-            surf = self._transform_surface_list(surfs_list=[surf])[0]
+            _surf = self._transform_surface_list(surfs_list=[_surf])[0]
             ax.set_xlim(self.x_min, self.x_max)
             ax.set_ylim(self.y_min, self.y_max)
 
         kwargs.update(drawstyle=f"steps-{self.step_dir}")
-        _check_surface(surf)
-        X, Y = surf[:, 0], surf[:, 1]
+        _check_surface(_surf)
+        X, Y = _surf[:, 0], _surf[:, 1]
         line = ax.plot(X, Y, color=color, label=label, linestyle=linestyle, marker=marker, **kwargs)[0]
         _change_scale(ax, self.log_scale)
         return line
@@ -218,12 +220,13 @@ class EmpiricalAttainmentFuncPlot:
                 The kwargs for scatter.
         """
         lines: List[Any] = []
-        surfs = self._transform_surface_list(surfs)
+        _surfs = deepcopy(surfs)
+        _surfs = self._transform_surface_list(_surfs)
 
-        n_surfs = len(surfs)
+        n_surfs = len(_surfs)
         linestyles = linestyles if linestyles is not None else [None] * n_surfs
         markers = markers if markers is not None else [None] * n_surfs
-        for surf, color, label, linestyle, marker in zip(surfs, colors, labels, linestyles, markers):
+        for surf, color, label, linestyle, marker in zip(_surfs, colors, labels, linestyles, markers):
             kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
             line = self.plot_surface(ax, surf, transform=False, **kwargs)
             lines.append(line)
@@ -264,25 +267,27 @@ class EmpiricalAttainmentFuncPlot:
         """
         if surfs.shape[0] != 3:
             raise ValueError(f"plot_surface_with_band requires three levels, but got only {surfs.shape[0]} levels")
+
+        _surfs = deepcopy(surfs)
         if transform:
-            surfs = self._transform_surface_list(surfs_list=surfs)
+            _surfs = self._transform_surface_list(surfs_list=_surfs)
             ax.set_xlim(self.x_min, self.x_max)
             ax.set_ylim(self.y_min, self.y_max)
 
-        for surf in surfs:
+        for surf in _surfs:
             _check_surface(surf)
 
-        X = surfs[0, :, 0]
+        X = _surfs[0, :, 0]
 
         marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)
         kwargs.update(color=color)
         alpha = kwargs.pop("alpha", None)
-        ax.fill_between(X, surfs[0, :, 1], surfs[2, :, 1], alpha=0.2, step=self.step_dir, **kwargs)
+        ax.fill_between(X, _surfs[0, :, 1], _surfs[2, :, 1], alpha=0.2, step=self.step_dir, **kwargs)
         kwargs["alpha"] = alpha
 
         # marker and linestyle are only for plot
         kwargs.update(label=label, linestyle=linestyle, marker=marker, **marker_kwargs)
-        line = ax.plot(X, surfs[1, :, 1], drawstyle=f"steps-{self.step_dir}", **kwargs)[0]
+        line = ax.plot(X, _surfs[1, :, 1], drawstyle=f"steps-{self.step_dir}", **kwargs)[0]
         _change_scale(ax, self.log_scale)
         return line
 
@@ -314,12 +319,13 @@ class EmpiricalAttainmentFuncPlot:
                 The kwargs for scatter.
         """
         lines: List[Any] = []
-        surfs_list = self._transform_surface_list(surfs_list)
+        _surfs_list = deepcopy(surfs_list)
+        _surfs_list = self._transform_surface_list(_surfs_list)
 
-        n_surfs = len(surfs_list)
+        n_surfs = len(_surfs_list)
         linestyles = linestyles if linestyles is not None else [None] * n_surfs
         markers = markers if markers is not None else [None] * n_surfs
-        for surf, color, label, linestyle, marker in zip(surfs_list, colors, labels, linestyles, markers):
+        for surf, color, label, linestyle, marker in zip(_surfs_list, colors, labels, linestyles, markers):
             kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
             line = self.plot_surface_with_band(ax, surf, transform=False, **kwargs)
             lines.append(line)

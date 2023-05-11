@@ -25,8 +25,9 @@ def _get_pf_set_list(costs: np.ndarray) -> List[np.ndarray]:
             Note that each pareto front set is sorted based on the ascending order of
             the first objective.
     """
+    _cost_copy = costs.copy()
     pf_set_list: List[np.ndarray] = []
-    for _costs in costs:
+    for _costs in _cost_copy:
         # Sort by the first objective, then the second objective
         order = np.lexsort((-_costs[:, 1], _costs[:, 0]))
         _costs = _costs[order]
@@ -155,11 +156,12 @@ def get_empirical_attainment_surface(
     if not np.all(np.maximum.accumulate(levels) == levels):
         raise ValueError(f"levels must be an increasing sequence, but got {levels}")
 
+    _costs = costs.copy()
     if larger_is_better_objectives is not None:
-        costs = _change_directions(costs, larger_is_better_objectives=larger_is_better_objectives)
+        _costs = _change_directions(_costs, larger_is_better_objectives=larger_is_better_objectives)
 
     log_scale = log_scale if log_scale is not None else []
-    pf_set_list = _get_pf_set_list(costs)
+    pf_set_list = _get_pf_set_list(_costs)
     pf_sols = np.vstack(pf_set_list)
     X = np.unique(np.hstack([LOGEPS if 0 in log_scale else -np.inf, pf_sols[:, 0], np.inf]))
 
