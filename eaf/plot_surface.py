@@ -13,6 +13,7 @@ from eaf.utils import (
 
 from fast_pareto.pareto import _change_directions
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -117,7 +118,7 @@ class EmpiricalAttainmentFuncPlot:
         marker: Optional[str] = None,
         transform: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> matplotlib.lines.Line2D:
         """
         Plot multiple surfaces.
 
@@ -139,6 +140,10 @@ class EmpiricalAttainmentFuncPlot:
                 Whether automatically transforming based on (x_min, x_max) and (y_min, y_max).
             kwargs:
                 The kwargs for ax.plot.
+
+        Returns:
+            line (matplotlib.lines.Line2D):
+                The plotted line object.
         """
         if len(surf.shape) != 2 or surf.shape[1] != 2:
             raise ValueError(f"The shape of surf must be (n_points, 2), but got {surf.shape}")
@@ -164,7 +169,7 @@ class EmpiricalAttainmentFuncPlot:
         linestyle: Optional[str] = None,
         marker: Optional[str] = None,
         **kwargs: Any,
-    ) -> Any:
+    ) -> matplotlib.lines.Line2D:
         """
         Plot the true pareto front surface.
         The true pareto front must be provided when instantiating this class.
@@ -182,6 +187,10 @@ class EmpiricalAttainmentFuncPlot:
                 The marker of the plot.
             kwargs:
                 The kwargs for ax.plot.
+
+        Returns:
+            line (matplotlib.lines.Line2D):
+                The plotted line object.
         """
         if self._true_pareto_sols is None:
             raise AttributeError("true_pareto_sols is not provided at the instantiation")
@@ -214,7 +223,7 @@ class EmpiricalAttainmentFuncPlot:
         linestyles: Optional[List[Optional[str]]] = None,
         markers: Optional[List[Optional[str]]] = None,
         **kwargs: Any,
-    ) -> List[Any]:
+    ) -> List[matplotlib.lines.Line2D]:
         """
         Plot multiple surfaces.
 
@@ -235,8 +244,12 @@ class EmpiricalAttainmentFuncPlot:
                 The markers of each plot.
             kwargs:
                 The kwargs for ax.plot.
+
+        Returns:
+            lines (List[matplotlib.lines.Line2D]):
+                A list of the plotted line objects.
         """
-        lines: List[Any] = []
+        lines: List[matplotlib.lines.Line2D] = []
         _surfs = deepcopy(surfs)
         _surfs = self._transform_surface_list(_surfs)
 
@@ -262,7 +275,7 @@ class EmpiricalAttainmentFuncPlot:
         marker: Optional[str] = None,
         transform: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> matplotlib.lines.Line2D:
         """
         Plot the surface with a band.
         Typically, we would like to plot median with the band between
@@ -287,6 +300,10 @@ class EmpiricalAttainmentFuncPlot:
                 Whether automatically transforming based on (x_min, x_max) and (y_min, y_max).
             kwargs:
                 The kwargs for ax.plot.
+
+        Returns:
+            line (matplotlib.lines.Line2D):
+                The plotted line object.
         """
         if surfs.shape[0] != 3:
             raise ValueError(f"plot_surface_with_band requires three levels, but got only {surfs.shape[0]} levels")
@@ -323,7 +340,7 @@ class EmpiricalAttainmentFuncPlot:
         linestyles: Optional[List[Optional[str]]] = None,
         markers: Optional[List[Optional[str]]] = None,
         **kwargs: Any,
-    ) -> List[Any]:
+    ) -> List[matplotlib.lines.Line2D]:
         """
         Plot multiple surfaces with a band.
 
@@ -344,8 +361,12 @@ class EmpiricalAttainmentFuncPlot:
                 The markers of each plot.
             kwargs:
                 The kwargs for ax.plot.
+
+        Returns:
+            lines (List[matplotlib.lines.Line2D]):
+                A list of the plotted line objects.
         """
-        lines: List[Any] = []
+        lines: List[matplotlib.lines.Line2D] = []
         _surfs_list = deepcopy(surfs_list)
         _surfs_list = self._transform_surface_list(_surfs_list)
 
@@ -389,7 +410,7 @@ class EmpiricalAttainmentFuncPlot:
         axis_label: bool = True,
         normalize: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> matplotlib.lines.Line2D:
         """
         Plot the hypervolume with a standard error band.
 
@@ -417,6 +438,10 @@ class EmpiricalAttainmentFuncPlot:
                 If True, the y-axis is scaled into [0, 1].
             kwargs:
                 The kwargs for ax.plot.
+
+        Returns:
+            line (matplotlib.lines.Line2D):
+                The plotted line object.
         """
         if len(costs_array.shape) != 3 or costs_array.shape[-1] != 2:
             raise ValueError(
@@ -469,7 +494,7 @@ class EmpiricalAttainmentFuncPlot:
         axis_label: bool = True,
         normalize: bool = True,
         **kwargs: Any,
-    ) -> List[Any]:
+    ) -> List[matplotlib.lines.Line2D]:
         """
         Plot multiple hypervolume curves.
 
@@ -496,7 +521,11 @@ class EmpiricalAttainmentFuncPlot:
                 Whether to normalize the hypervolume or not.
                 If True, the y-axis is scaled into [0, 1].
             kwargs:
-                The kwargs for scatter.
+                The kwargs for ax.plot.
+
+        Returns:
+            lines (List[matplotlib.lines.Line2D]):
+                A list of the plotted line objects.
         """
         if len(costs_array.shape) != 4 or costs_array.shape[-1] != 2:
             raise ValueError(
@@ -504,7 +533,7 @@ class EmpiricalAttainmentFuncPlot:
                 f" but got {costs_array.shape}"
             )
 
-        lines: List[Any] = []
+        lines: List[matplotlib.lines.Line2D] = []
         n_observations = costs_array.shape[-2]
         n_lines = len(costs_array)
         linestyles = linestyles if linestyles is not None else [None] * n_lines
@@ -543,7 +572,7 @@ class EmpiricalAttainmentFuncPlot:
         linestyle: Optional[str] = None,
         normalize: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> matplotlib.lines.Line2D:
         """
         Plot multiple surfaces.
 
@@ -563,6 +592,10 @@ class EmpiricalAttainmentFuncPlot:
                 The marker of the plot.
             kwargs:
                 The kwargs for ax.plot.
+
+        Returns:
+            line (matplotlib.lines.Line2D):
+                The plotted line object.
         """
 
         if normalize:
