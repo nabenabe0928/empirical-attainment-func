@@ -144,6 +144,10 @@ def test_plot_hypervolume() -> None:
             ax, costs_array=costs, colors=["red"] * 2, labels=["dummy"] * 2, normalize=False
         )
 
+    with pytest.raises(AttributeError):
+        # true pareto is not provided ==> normalize must be False
+        eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy", normalize=True)
+
     ref_point[0] = 1e-12
     eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point, larger_is_better_objectives=[0])
     eaf_plot.plot_hypervolume2d_with_band(ax, costs_array=costs, color="red", label="dummy", normalize=False)

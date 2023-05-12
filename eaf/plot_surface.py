@@ -457,6 +457,12 @@ class EmpiricalAttainmentFuncPlot:
             hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=ref_point)
 
         if normalize:
+            if self._true_pareto_sols is None:
+                raise AttributeError(
+                    "true_pareto_sols is not provided at the instantiation, but it is required to "
+                    "call `plot_hypervolume2d_with_band` with normalize=True. Consider using normalize=False"
+                )
+
             max_hv = self._compute_true_pareto_surface_hypervolume2d()
             hvs /= max_hv
 
