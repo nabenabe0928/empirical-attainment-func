@@ -119,6 +119,21 @@ if __name__ == "__main__":
 ![Demo of the attainment surface with a band](figs/demo_with_band.png)
 
 
+# Citation
+
+Please cite the following paper:
+
+```
+@inproceedings{watanabe2023pareto,
+  title   = {{P}ython Tool for Visualizing Variability of {P}areto Fronts over Multiple Runs},
+  author  = {S. Watanabe},
+  year    = {2023},
+  journal = {arXiv:2305.08852}
+}
+```
+
+This paper has more information as well.
+
 # Supplementary information
 ## Preliminaries
 1. Define a multi-output function as $f: \mathbb{R}^D \rightarrow \mathbb{R}^M$,
