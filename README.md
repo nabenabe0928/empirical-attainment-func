@@ -1,8 +1,5 @@
 # Empirical attainment function for the bi-objective optimization visualization
 
-[![Build Status](https://github.com/nabenabe0928/empirical-attainment-func/workflows/Functionality%20test/badge.svg?branch=main)](https://github.com/nabenabe0928/empirical-attainment-func)
-[![codecov](https://codecov.io/gh/nabenabe0928/empirical-attainment-func/branch/main/graph/badge.svg?token=P3MJPKA8H7)](https://codecov.io/gh/nabenabe0928/empirical-attainment-func)
-
 ## Motivation
 
 When we run single-objective optimization problems, comparisons between multiple methods over multiple seeds are not so hard.
@@ -117,22 +114,6 @@ if __name__ == "__main__":
 **Output**
 
 ![Demo of the attainment surface with a band](figs/demo_with_band.png)
-
-
-# Citation
-
-Please cite the following paper:
-
-```
-@inproceedings{watanabe2023pareto,
-  title   = {{P}ython Tool for Visualizing Variability of {P}areto Fronts over Multiple Runs},
-  author  = {S. Watanabe},
-  year    = {2023},
-  journal = {arXiv:2305.08852}
-}
-```
-
-This paper has more information as well.
 
 # Supplementary information
 ## Preliminaries
