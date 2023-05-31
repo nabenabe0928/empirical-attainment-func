@@ -124,11 +124,11 @@ if __name__ == "__main__":
 Please cite the following paper:
 
 ```
-@inproceedings{watanabe2023pareto,
+@article{watanabe2023pareto,
   title   = {{P}ython Tool for Visualizing Variability of {P}areto Fronts over Multiple Runs},
   author  = {S. Watanabe},
+  journal = {arXiv:2305.08852},
   year    = {2023},
-  journal = {arXiv:2305.08852}
 }
 ```
 
