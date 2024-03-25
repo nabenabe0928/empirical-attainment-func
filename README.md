@@ -13,9 +13,13 @@ We use the $k$% attainment surface or empirical attainment function and visualiz
 
 ![Demo of the attainment surface](figs/demo.png)
 
-The original paper is available below.
+The original paper is available below:
 
 [1] [On the Performance Assessment and Comparison of Stochastic Multi-objective Optimizers](https://eden.dei.uc.pt/~cmfonsec/fonseca-ppsn1996-reprint.pdf)
+
+> [!IMPORTANT]
+> When you use this package, please cite the paper:
+> [Python Tool for Visualizing Variability of Pareto Fronts over Multiple Runs](https://arxiv.org/abs/2305.08852).
 
 **NOTE**
 
@@ -123,7 +127,7 @@ if __name__ == "__main__":
 
 Please cite the following paper:
 
-```
+```bibtex
 @article{watanabe2023pareto,
   title   = {{P}ython Tool for Visualizing Variability of {P}areto Fronts over Multiple Runs},
   author  = {S. Watanabe},

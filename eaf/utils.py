@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from __future__ import annotations
 
 from fast_pareto.pareto import _change_directions
 
@@ -27,7 +27,7 @@ def _compute_hypervolume2d(costs_array: np.ndarray, ref_point: np.ndarray) -> np
     return np.sum(w * h, axis=-1)
 
 
-def _change_scale(ax: plt.Axes, log_scale: Optional[List[int]]) -> None:
+def _change_scale(ax: plt.Axes, log_scale: list[int] | None) -> None:
     log_scale = [] if log_scale is None else log_scale
     if 0 in log_scale:
         ax.set_xscale("log")
@@ -37,8 +37,8 @@ def _change_scale(ax: plt.Axes, log_scale: Optional[List[int]]) -> None:
 
 def _get_slighly_expanded_value_range(
     costs: np.ndarray,
-    log_scale: Optional[List[int]] = None,
-) -> Tuple[float, float, float, float]:
+    log_scale: list[int] | None = None,
+) -> tuple[float, float, float, float]:
     X = costs[..., 0].flatten()
     Y = costs[..., 1].flatten()
     log_scale = log_scale if log_scale is not None else []
@@ -60,8 +60,8 @@ def _get_slighly_expanded_value_range(
 
 def pareto_front_to_surface(
     pareto_front: np.ndarray,
-    larger_is_better_objectives: Optional[List[int]] = None,
-    log_scale: Optional[List[int]] = None,
+    larger_is_better_objectives: list[int] | None = None,
+    log_scale: list[int] | None = None,
     x_min: float = -np.inf,
     x_max: float = np.inf,
     y_min: float = -np.inf,
@@ -73,10 +73,10 @@ def pareto_front_to_surface(
     Args:
         pareto_front (np.ndarray):
             The raw pareto front solution with the shape of (n_sols, n_obj).
-        larger_is_better_objectives (Optional[List[int]]):
+        larger_is_better_objectives (list[int] | None):
             The indices of the objectives that are better when the values are larger.
             If None, we consider all objectives are better when they are smaller.
-        log_scale (Optional[List[int]]):
+        log_scale (list[int] | None):
             The indices of the log scale.
             For example, if you would like to plot the first objective in the log scale,
             you need to feed log_scale=[0].
@@ -150,7 +150,7 @@ def _check_surface(surf: np.ndarray) -> np.ndarray:
         raise ValueError("The axis [:, 0] of surf must be an increasing sequence")
 
 
-def _step_direction(larger_is_better_objectives: Optional[List[int]]) -> str:
+def _step_direction(larger_is_better_objectives: list[int] | None) -> str:
     """
     Check here:
         https://matplotlib.org/stable/gallery/lines_bars_and_markers/step_demo.html#sphx-glr-gallery-lines-bars-and-markers-step-demo-py

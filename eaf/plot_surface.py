@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from eaf.utils import (
     LOGEPS,
@@ -19,9 +21,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def _extract_marker_kwargs(**kwargs: Any) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    marker_kwargs: Dict[str, Any] = dict()
-    new_kwargs: Dict[str, Any] = dict()
+def _extract_marker_kwargs(**kwargs: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    marker_kwargs: dict[str, Any] = dict()
+    new_kwargs: dict[str, Any] = dict()
     for k, v in kwargs.items():
         if k.startswith("mark"):
             marker_kwargs[k] = v
@@ -36,13 +38,13 @@ class EmpiricalAttainmentFuncPlot:
     The class to plot empirical attainment function.
 
     Args:
-        true_pareto_sols (Optional[np.ndarray]):
+        true_pareto_sols (np.ndarray | None):
             The true Pareto solutions if available.
             It is used to compute the best values of each objective.
-        larger_is_better_objectives (Optional[List[int]]):
+        larger_is_better_objectives (list[int] | None):
             The indices of the objectives that are better when the values are larger.
             If None, we consider all objectives are better when they are smaller.
-        log_scale (Optional[List[int]]):
+        log_scale (list[int] | None):
             The indices of the log scale.
             For example, if you would like to plot the first objective in the log scale,
             you need to feed log_scale=[0].
@@ -51,20 +53,20 @@ class EmpiricalAttainmentFuncPlot:
         x_min, x_max, y_min, y_max (float):
             The lower/upper bounds for each objective if available.
             It is used to fix the value ranges of each objective in plots.
-        ref_point (Optional[np.ndarray]):
+        ref_point (np.ndarray | None):
             The reference point to be used for the visualization of hypervolume plots.
     """
 
     def __init__(
         self,
-        true_pareto_sols: Optional[np.ndarray] = None,
-        larger_is_better_objectives: Optional[List[int]] = None,
-        log_scale: Optional[List[int]] = None,
+        true_pareto_sols: np.ndarray | None = None,
+        larger_is_better_objectives: list[int] | None = None,
+        log_scale: list[int] | None = None,
         x_min: float = np.inf,
         x_max: float = -np.inf,
         y_min: float = np.inf,
         y_max: float = -np.inf,
-        ref_point: Optional[np.ndarray] = None,
+        ref_point: np.ndarray | None = None,
     ):
         self.step_dir = _step_direction(larger_is_better_objectives)
         self.larger_is_better_objectives = (
@@ -91,7 +93,7 @@ class EmpiricalAttainmentFuncPlot:
             self.y_min = max(LOGEPS, y_min) if 1 in self.log_scale else y_min
             self.y_max = y_max
 
-    def _transform_surface_list(self, surfs_list: List[np.ndarray]) -> List[np.ndarray]:
+    def _transform_surface_list(self, surfs_list: list[np.ndarray]) -> list[np.ndarray]:
         for surf in surfs_list:
             x_min, x_max, y_min, y_max = _get_slighly_expanded_value_range(surf, self.log_scale)
             self.x_min, self.x_max = min(self.x_min, x_min), max(self.x_max, x_max)
@@ -114,8 +116,8 @@ class EmpiricalAttainmentFuncPlot:
         surf: np.ndarray,
         color: str,
         label: str,
-        linestyle: Optional[str] = None,
-        marker: Optional[str] = None,
+        linestyle: str | None = None,
+        marker: str | None = None,
         transform: bool = True,
         **kwargs: Any,
     ) -> matplotlib.lines.Line2D:
@@ -132,9 +134,9 @@ class EmpiricalAttainmentFuncPlot:
                 The color of the plot.
             label (str):
                 The label of the plot.
-            linestyle (Optional[str]):
+            linestyle (str | None):
                 The linestyle of the plot.
-            marker (Optional[str]):
+            marker (str | None):
                 The marker of the plot.
             transform (bool):
                 Whether automatically transforming based on (x_min, x_max) and (y_min, y_max).
@@ -166,8 +168,8 @@ class EmpiricalAttainmentFuncPlot:
         ax: plt.Axes,
         color: str,
         label: str,
-        linestyle: Optional[str] = None,
-        marker: Optional[str] = None,
+        linestyle: str | None = None,
+        marker: str | None = None,
         **kwargs: Any,
     ) -> matplotlib.lines.Line2D:
         """
@@ -181,9 +183,9 @@ class EmpiricalAttainmentFuncPlot:
                 The color of the plot.
             label (str):
                 The label of the plot.
-            linestyle (Optional[str]):
+            linestyle (str | None):
                 The linestyle of the plot.
-            marker (Optional[str]):
+            marker (str | None):
                 The marker of the plot.
             kwargs:
                 The kwargs for ax.plot.
@@ -217,39 +219,39 @@ class EmpiricalAttainmentFuncPlot:
     def plot_multiple_surface(
         self,
         ax: plt.Axes,
-        surfs: Union[np.ndarray, List[np.ndarray]],
-        colors: List[str],
-        labels: List[str],
-        linestyles: Optional[List[Optional[str]]] = None,
-        markers: Optional[List[Optional[str]]] = None,
+        surfs: np.ndarray | list[np.ndarray],
+        colors: list[str],
+        labels: list[str],
+        linestyles: list[str | None] | None = None,
+        markers: list[str | None] | None = None,
         **kwargs: Any,
-    ) -> List[matplotlib.lines.Line2D]:
+    ) -> list[matplotlib.lines.Line2D]:
         """
         Plot multiple surfaces.
 
         Args:
             ax (plt.Axes):
                 The subplots axes.
-            surfs (Union[np.ndarray, List[np.ndarray]]):
+            surfs (np.ndarray | list[np.ndarray]):
                 The vertices of the empirical attainment surfaces for each plot.
                 Each element should have the shape of (X.size, 2).
                 If this is an array, then the shape must be (n_surf, X.size, 2).
-            colors (List[str]):
+            colors (list[str]):
                 The colors of each plot
-            labels (List[str]):
+            labels (list[str]):
                 The labels of each plot.
-            linestyles (Optional[List[str]]):
+            linestyles (list[str | None] | None):
                 The linestyles of each plot.
-            markers (Optional[List[str]]):
+            markers (list[str | None] | None):
                 The markers of each plot.
             kwargs:
                 The kwargs for ax.plot.
 
         Returns:
-            lines (List[matplotlib.lines.Line2D]):
+            lines (list[matplotlib.lines.Line2D]):
                 A list of the plotted line objects.
         """
-        lines: List[matplotlib.lines.Line2D] = []
+        lines: list[matplotlib.lines.Line2D] = []
         _surfs = deepcopy(surfs)
         _surfs = self._transform_surface_list(_surfs)
 
@@ -271,8 +273,8 @@ class EmpiricalAttainmentFuncPlot:
         surfs: np.ndarray,
         color: str,
         label: str,
-        linestyle: Optional[str] = None,
-        marker: Optional[str] = None,
+        linestyle: str | None = None,
+        marker: str | None = None,
         transform: bool = True,
         **kwargs: Any,
     ) -> matplotlib.lines.Line2D:
@@ -292,9 +294,9 @@ class EmpiricalAttainmentFuncPlot:
                 The color of the plot
             label (str):
                 The label of the plot.
-            linestyle (Optional[str]):
+            linestyle (str | None):
                 The linestyle of the plot.
-            marker (Optional[str]):
+            marker (str | None):
                 The marker of the plot.
             transform (bool):
                 Whether automatically transforming based on (x_min, x_max) and (y_min, y_max).
@@ -334,39 +336,39 @@ class EmpiricalAttainmentFuncPlot:
     def plot_multiple_surface_with_band(
         self,
         ax: plt.Axes,
-        surfs_list: Union[np.ndarray, List[np.ndarray]],
-        colors: List[str],
-        labels: List[str],
-        linestyles: Optional[List[Optional[str]]] = None,
-        markers: Optional[List[Optional[str]]] = None,
+        surfs_list: np.ndarray | list[np.ndarray],
+        colors: list[str],
+        labels: list[str],
+        linestyles: list[str | None] | None = None,
+        markers: list[str | None] | None = None,
         **kwargs: Any,
-    ) -> List[matplotlib.lines.Line2D]:
+    ) -> list[matplotlib.lines.Line2D]:
         """
         Plot multiple surfaces with a band.
 
         Args:
             ax (plt.Axes):
                 The subplots axes.
-            surfs_list (Union[np.ndarray, List[np.ndarray]]):
+            surfs_list (np.ndarray | list[np.ndarray]):
                 The vertices of the empirical attainment surfaces for each plot.
                 Each element should have the shape of (3, X.size, 2).
                 If this is an array, then the shape must be (n_surf, 3, X.size, 2).
-            colors (List[str]):
+            colors (list[str]):
                 The colors of each plot.
-            labels (List[str]):
+            labels (list[str]):
                 The labels of each plot.
-            linestyles (Optional[List[str]]):
+            linestyles (list[str | None] | None):
                 The linestyles of each plot.
-            markers (Optional[List[str]]):
+            markers (list[str | None] | None):
                 The markers of each plot.
             kwargs:
                 The kwargs for ax.plot.
 
         Returns:
-            lines (List[matplotlib.lines.Line2D]):
+            lines (list[matplotlib.lines.Line2D]):
                 A list of the plotted line objects.
         """
-        lines: List[matplotlib.lines.Line2D] = []
+        lines: list[matplotlib.lines.Line2D] = []
         _surfs_list = deepcopy(surfs_list)
         _surfs_list = self._transform_surface_list(_surfs_list)
 
@@ -382,7 +384,7 @@ class EmpiricalAttainmentFuncPlot:
         ax.set_ylim(self.y_min, self.y_max)
         return lines
 
-    def _transform_ref_point_and_costs_array(self, costs_array: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _transform_ref_point_and_costs_array(self, costs_array: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         ref_point = self._ref_point.copy()
         _costs_array = costs_array.copy()
         if self.x_is_log:
@@ -404,8 +406,8 @@ class EmpiricalAttainmentFuncPlot:
         costs_array: np.ndarray,
         color: str,
         label: str,
-        linestyle: Optional[str] = None,
-        marker: Optional[str] = None,
+        linestyle: str | None = None,
+        marker: str | None = None,
         log: bool = False,
         axis_label: bool = True,
         normalize: bool = True,
@@ -425,9 +427,9 @@ class EmpiricalAttainmentFuncPlot:
                 The color of the plot.
             label (str):
                 The label of the plot.
-            linestyle (Optional[str]):
+            linestyle (str | None):
                 The linestyle of the plot.
-            marker (Optional[str]):
+            marker (str | None):
                 The marker of the plot.
             log (bool):
                 Whether to use the log scale in the y-axis of the plot.
@@ -492,15 +494,15 @@ class EmpiricalAttainmentFuncPlot:
         self,
         ax: plt.Axes,
         costs_array: np.ndarray,
-        colors: List[str],
-        labels: List[str],
-        linestyles: Optional[List[Optional[str]]] = None,
-        markers: Optional[List[Optional[str]]] = None,
+        colors: list[str],
+        labels: list[str],
+        linestyles: list[str | None] | None = None,
+        markers: list[str | None] | None = None,
         log: bool = False,
         axis_label: bool = True,
         normalize: bool = True,
         **kwargs: Any,
-    ) -> List[matplotlib.lines.Line2D]:
+    ) -> list[matplotlib.lines.Line2D]:
         """
         Plot multiple hypervolume curves.
 
@@ -511,13 +513,13 @@ class EmpiricalAttainmentFuncPlot:
                 The costs obtained in the observations.
                 The shape must be (n_curves, n_independent_runs, n_samples, n_obj).
                 For now, we only support n_obj == 2.
-            colors (List[str]):
+            colors (list[str]):
                 The colors of each plot.
-            labels (List[str]):
+            labels (list[str]):
                 The labels of each plot.
-            linestyles (Optional[List[str]]):
+            linestyles (list[str | None] | None):
                 The linestyles of each plot.
-            markers (Optional[List[str]]):
+            markers (list[str | None] | None):
                 The markers of each plot.
             log (bool):
                 Whether to use the log scale in the y-axis of the plot.
@@ -530,7 +532,7 @@ class EmpiricalAttainmentFuncPlot:
                 The kwargs for ax.plot.
 
         Returns:
-            lines (List[matplotlib.lines.Line2D]):
+            lines (list[matplotlib.lines.Line2D]):
                 A list of the plotted line objects.
         """
         if len(costs_array.shape) != 4 or costs_array.shape[-1] != 2:
@@ -539,7 +541,7 @@ class EmpiricalAttainmentFuncPlot:
                 f" but got {costs_array.shape}"
             )
 
-        lines: List[matplotlib.lines.Line2D] = []
+        lines: list[matplotlib.lines.Line2D] = []
         n_observations = costs_array.shape[-2]
         n_lines = len(costs_array)
         linestyles = linestyles if linestyles is not None else [None] * n_lines
@@ -575,7 +577,7 @@ class EmpiricalAttainmentFuncPlot:
         n_observations: int,
         color: str,
         label: str,
-        linestyle: Optional[str] = None,
+        linestyle: str | None = None,
         normalize: bool = True,
         **kwargs: Any,
     ) -> matplotlib.lines.Line2D:
@@ -592,10 +594,8 @@ class EmpiricalAttainmentFuncPlot:
                 The color of the plot.
             label (str):
                 The label of the plot.
-            linestyle (Optional[str]):
+            linestyle (str | None):
                 The linestyle of the plot.
-            marker (Optional[str]):
-                The marker of the plot.
             kwargs:
                 The kwargs for ax.plot.
 

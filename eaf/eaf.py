@@ -1,4 +1,4 @@
-from typing import List, Optional
+from __future__ import annotations
 
 from eaf.utils import LOGEPS
 
@@ -8,7 +8,7 @@ from fast_pareto.pareto import _change_directions
 import numpy as np
 
 
-def _get_pf_set_list(costs: np.ndarray) -> List[np.ndarray]:
+def _get_pf_set_list(costs: np.ndarray) -> list[np.ndarray]:
     """
     Get the list of Pareto front sets.
 
@@ -19,14 +19,14 @@ def _get_pf_set_list(costs: np.ndarray) -> List[np.ndarray]:
             For now, we only support n_obj == 2.
 
     Returns:
-        pf_set_list (List[np.ndarray]):
+        pf_set_list (list[np.ndarray]):
             The list of the Pareto front sets.
             The shape is (trial number, Pareto solution index, objective index).
             Note that each pareto front set is sorted based on the ascending order of
             the first objective.
     """
     _cost_copy = costs.copy()
-    pf_set_list: List[np.ndarray] = []
+    pf_set_list: list[np.ndarray] = []
     for _costs in _cost_copy:
         # Sort by the first objective, then the second objective
         order = np.lexsort((-_costs[:, 1], _costs[:, 0]))
@@ -35,7 +35,7 @@ def _get_pf_set_list(costs: np.ndarray) -> List[np.ndarray]:
     return pf_set_list
 
 
-def _compute_emp_att_surf(X: np.ndarray, pf_set_list: List[np.ndarray], levels: np.ndarray) -> np.ndarray:
+def _compute_emp_att_surf(X: np.ndarray, pf_set_list: list[np.ndarray], levels: np.ndarray) -> np.ndarray:
     """
     Compute the empirical attainment surface of the given Pareto front sets.
 
@@ -53,7 +53,7 @@ def _compute_emp_att_surf(X: np.ndarray, pf_set_list: List[np.ndarray], levels: 
                 level=1 leads to the best attainment surface,
                 level=n_independent_runs leads to the worst attainment surface,
                 level=n_independent_runs//2 leads to the median attainment surface.
-        pf_set_list (List[np.ndarray]):
+        pf_set_list (list[np.ndarray]):
             The list of the Pareto front sets.
             The shape is (trial number, Pareto solution index, objective index).
             Note that each pareto front set is sorted based on the ascending order of
@@ -105,9 +105,9 @@ def _compute_emp_att_surf(X: np.ndarray, pf_set_list: List[np.ndarray], levels: 
 
 def get_empirical_attainment_surface(
     costs: np.ndarray,
-    levels: List[int],
-    larger_is_better_objectives: Optional[List[int]] = None,
-    log_scale: Optional[List[int]] = None,
+    levels: list[int],
+    larger_is_better_objectives: list[int] | None = None,
+    log_scale: list[int] | None = None,
 ) -> np.ndarray:
     """
     Get the empirical attainment surface given the costs observations.
@@ -117,7 +117,7 @@ def get_empirical_attainment_surface(
             The costs obtained in the observations.
             The shape must be (n_independent_runs, n_samples, n_obj).
             For now, we only support n_obj == 2.
-        levels (List[int]):
+        levels (list[int]):
             A list of `level` described below:
                 Control the k in the k-% attainment surface.
                     k = level / n_independent_runs
@@ -126,10 +126,10 @@ def get_empirical_attainment_surface(
                 level=1 leads to the best attainment surface,
                 level=n_independent_runs leads to the worst attainment surface,
                 level=n_independent_runs//2 leads to the median attainment surface.
-        larger_is_better_objectives (Optional[List[int]]):
+        larger_is_better_objectives (list[int] | None):
             The indices of the objectives that are better when the values are larger.
             If None, we consider all objectives are better when they are smaller.
-        log_scale (Optional[List[int]]):
+        log_scale (list[int] | None):
             The indices of the log scale.
             For example, if you would like to plot the first objective in the log scale,
             you need to feed log_scale=[0].
