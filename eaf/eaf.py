@@ -29,9 +29,8 @@ def _get_pf_set_list(costs: np.ndarray) -> list[np.ndarray]:
     pf_set_list: list[np.ndarray] = []
     for _costs in _cost_copy:
         # Sort by the first objective, then the second objective
-        order = np.lexsort((-_costs[:, 1], _costs[:, 0]))
-        _costs = _costs[order]
-        pf_set_list.append(_costs[is_pareto_front(_costs, filter_duplication=True)])
+        _costs = np.unique(_costs, axis=0)
+        pf_set_list.append(_costs[is_pareto_front(_costs)])
     return pf_set_list
 
 
